@@ -13,8 +13,6 @@ static GstFlowReturn pullSample(GstAppSink *appsink, gpointer user_data) {
         return GST_FLOW_ERROR;
 
     // Process sample here
-    // (buffer, caps, map to OpenCV, etc.)
-
     GstCaps *caps = gst_sample_get_caps(sample);
     GstStructure *s = gst_caps_get_structure(caps, 0);
 
@@ -34,18 +32,33 @@ static GstFlowReturn pullSample(GstAppSink *appsink, gpointer user_data) {
     // OpenCV
     cv::Mat frame(height, width, CV_8UC3, map.data);
 
+    // Convert to grayscale
     cv::Mat gray;
     cv::cvtColor(frame, gray, cv::COLOR_RGB2GRAY);
 
-    // std::vector<cv::Rect> faces;
-    // face_cascade.detectMultiScale(
-    //     gray,
-    //     faces,
-    //     1.2,        // scale factor
-    //     5,          // min neighbors
-    //     0,
-    //     cv::Size(40, 40)
-    // );
+    // Detect faces
+    std::vector<cv::Rect> faces;
+    face_cascade.detectMultiScale(
+        gray,
+        faces,
+        1.2,        // scale factor
+        5,          // min neighbors
+        0,
+        cv::Size(40, 40)
+    );
+    g_print("Faces detected: %zu\n", faces.size());
+
+    // Draw rectangles around the faces (Annotate)
+    int i = 0;
+    for (const auto &r : faces) {
+        cv::rectangle(
+            frame,
+            r,
+            cv::Scalar(0, 255, 0),
+            2
+        );
+        i++;
+    }
 
     gst_buffer_unmap(buffer, &map);
     gst_sample_unref(sample);
@@ -104,6 +117,13 @@ static GstElement *initPipeline() {
 
 
 int main(int argc, char **argv) {
+    if (!face_cascade.load(
+        "/usr/share/opencv4/haarcascades/haarcascade_frontalface_default.xml"
+    )) {
+        g_printerr("Failed to load face cascade\n");
+        return -1;
+    }
+
     // Initialize GStreamer
     gst_init(&argc, &argv);
 
