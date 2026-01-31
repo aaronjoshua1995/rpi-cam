@@ -126,7 +126,7 @@ static GstElement *initStreamPipeline(int width, int height, int fps) {
         nullptr);
 
     g_object_set(udpsink,
-        "host", "192.168.1.81",  // CHANGE ME
+        "host", "192.168.1.70",  // CHANGE ME
         "port", 5000,
         nullptr);
 
