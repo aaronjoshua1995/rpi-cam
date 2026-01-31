@@ -68,7 +68,7 @@ static GstFlowReturn pullSample(GstAppSink *appsink, gpointer user_data) {
         0,
         cv::Size(40, 40)
     );
-    g_print("Faces detected: %zu\n", faces.size());
+    // g_print("Faces detected: %zu\n", faces.size());
 
     // Draw rectangles around the faces (Annotate)
     int i = 0;
