@@ -11,6 +11,23 @@ static GstFlowReturn pullSample(GstAppSink *appsink, gpointer user_data) {
     // Process sample here
     // (buffer, caps, map to OpenCV, etc.)
 
+    GstCaps *caps = gst_sample_get_caps(sample);
+    GstStructure *s = gst_caps_get_structure(caps, 0);
+
+    int width, height;
+    gst_structure_get_int(s, "width", &width);
+    gst_structure_get_int(s, "height", &height);
+
+    // Pull the image data
+    GstBuffer *buffer = gst_sample_get_buffer(sample);
+    GstMapInfo map;
+
+    if (!gst_buffer_map(buffer, &map, GST_MAP_READ)) {
+        gst_sample_unref(sample);
+        return GST_FLOW_ERROR;
+    }
+
+    gst_buffer_unmap(buffer, &map);
     gst_sample_unref(sample);
     return GST_FLOW_OK;
 }
