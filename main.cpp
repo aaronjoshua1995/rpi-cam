@@ -15,7 +15,7 @@ static GstElement *initPipeline() {
     }
 
     // Create elements to populate the pipeline
-    GstElement *source = gst_element_factory_make("camerasrc", "libcamerasrc");
+    GstElement *source = gst_element_factory_make("libcamerasrc", "camerasrc");
     GstElement *capsfilter = gst_element_factory_make("capsfilter", "maincaps");
     GstElement *appsink = gst_element_factory_make("appsink", "mainappsink");
     GstElement *fakesink = gst_element_factory_make("fakesink", "fakesink");
