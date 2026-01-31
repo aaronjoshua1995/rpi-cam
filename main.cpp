@@ -1,6 +1,10 @@
 #include <gst/gst.h>
 #include <gst/app/gstappsink.h>
+#include <opencv2/opencv.hpp>
+#include <opencv2/objdetect.hpp>
 #include <memory>
+
+cv::CascadeClassifier face_cascade;
 
 static GstFlowReturn pullSample(GstAppSink *appsink, gpointer user_data) {
     // GstElement *appsink = gst_bin_get_by_name(GST_BIN(pipeline), "sink");
@@ -26,6 +30,22 @@ static GstFlowReturn pullSample(GstAppSink *appsink, gpointer user_data) {
         gst_sample_unref(sample);
         return GST_FLOW_ERROR;
     }
+
+    // OpenCV
+    cv::Mat frame(height, width, CV_8UC3, map.data);
+
+    cv::Mat gray;
+    cv::cvtColor(frame, gray, cv::COLOR_RGB2GRAY);
+
+    // std::vector<cv::Rect> faces;
+    // face_cascade.detectMultiScale(
+    //     gray,
+    //     faces,
+    //     1.2,        // scale factor
+    //     5,          // min neighbors
+    //     0,
+    //     cv::Size(40, 40)
+    // );
 
     gst_buffer_unmap(buffer, &map);
     gst_sample_unref(sample);
