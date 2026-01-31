@@ -1,10 +1,19 @@
 #include <gst/gst.h>
+#include <gst/app/gstappsink.h>
 #include <memory>
 
-// static pullSample(GstElement *pipeline) {
-//     GstElement *appsink = gst_bin_get_by_name(GST_BIN(pipeline), "sink");
+static GstFlowReturn pullSample(GstAppSink *appsink, gpointer user_data) {
+    // GstElement *appsink = gst_bin_get_by_name(GST_BIN(pipeline), "sink");
+    GstSample *sample = gst_app_sink_pull_sample(appsink);
+    if (!sample)
+        return GST_FLOW_ERROR;
 
-// }
+    // Process sample here
+    // (buffer, caps, map to OpenCV, etc.)
+
+    gst_sample_unref(sample);
+    return GST_FLOW_OK;
+}
 
 static GstElement *initPipeline() {
     // Create the pipeline
@@ -18,7 +27,7 @@ static GstElement *initPipeline() {
     GstElement *source = gst_element_factory_make("libcamerasrc", "camerasrc");
     GstElement *capsfilter = gst_element_factory_make("capsfilter", "maincaps");
     GstElement *appsink = gst_element_factory_make("appsink", "mainappsink");
-    GstElement *fakesink = gst_element_factory_make("fakesink", "fakesink");
+    // GstElement *fakesink = gst_element_factory_make("fakesink", "fakesink");
 
     if (!source || !capsfilter || !appsink) {
         g_printerr("Failed to create elements.\n");
@@ -38,23 +47,23 @@ static GstElement *initPipeline() {
     gst_caps_unref(caps);
 
     // Populate the pipeline
-    gst_bin_add_many(GST_BIN(pipeline), source, capsfilter, fakesink, nullptr);
-    if (!gst_element_link_many(source, capsfilter, fakesink, nullptr)) {
+    gst_bin_add_many(GST_BIN(pipeline), source, capsfilter, appsink, nullptr);
+    if (!gst_element_link_many(source, capsfilter, appsink, nullptr)) {
         g_printerr("Failed to link main elements.\n");
         gst_object_unref(pipeline);
         return nullptr;
     }
 
-    g_print("Created main pipeline\n");
-    return pipeline;
-
-    // gst_app_sink_set_emit_signals(GST_APP_SINK(appsink), TRUE);
-    // gst_app_sink_set_drop(GST_APP_SINK(appsink), TRUE);
-    // gst_app_sink_set_max_buffers(GST_APP_SINK(appsink), 1);
-
+    gst_app_sink_set_emit_signals(GST_APP_SINK(appsink), TRUE);
+    gst_app_sink_set_drop(GST_APP_SINK(appsink), TRUE);
+    gst_app_sink_set_max_buffers(GST_APP_SINK(appsink), 1);
     // g_signal_connect(appsink, "new-sample", G_CALLBACK(pullSample), &face_cascade);
-}
+    g_signal_connect(appsink, "new-sample", G_CALLBACK(pullSample), nullptr);
 
+    g_print("Created main pipeline\n");
+
+    return pipeline;
+}
 
 
 int main(int argc, char **argv) {
