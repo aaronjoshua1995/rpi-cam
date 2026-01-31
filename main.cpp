@@ -1,10 +1,32 @@
 #include <gst/gst.h>
 #include <gst/app/gstappsink.h>
+#include <gst/app/gstappsrc.h>
 #include <opencv2/opencv.hpp>
 #include <opencv2/objdetect.hpp>
 #include <memory>
 
+static GstElement *stream_pipeline = nullptr;
+static GstElement *stream_appsrc   = nullptr;
+static gboolean    enable_streaming = TRUE;  // ← toggle this
+
 cv::CascadeClassifier face_cascade;
+
+static inline void pushFrameToStream(const cv::Mat &frame)
+{
+    if (!enable_streaming || !stream_appsrc)
+        return;
+
+    const gsize size = frame.total() * frame.elemSize();
+    GstBuffer *buffer = gst_buffer_new_allocate(nullptr, size, nullptr);
+
+    gst_buffer_fill(buffer, 0, frame.data, size);
+
+    GST_BUFFER_PTS(buffer) = gst_util_get_timestamp();
+    GST_BUFFER_DURATION(buffer) =
+        gst_util_uint64_scale_int(1, GST_SECOND, 30);
+
+    gst_app_src_push_buffer(GST_APP_SRC(stream_appsrc), buffer);
+}
 
 static GstFlowReturn pullSample(GstAppSink *appsink, gpointer user_data) {
     // GstElement *appsink = gst_bin_get_by_name(GST_BIN(pipeline), "sink");
@@ -59,11 +81,69 @@ static GstFlowReturn pullSample(GstAppSink *appsink, gpointer user_data) {
         );
         i++;
     }
+    pushFrameToStream(frame);
 
     gst_buffer_unmap(buffer, &map);
     gst_sample_unref(sample);
     return GST_FLOW_OK;
 }
+
+static GstElement *initStreamPipeline(int width, int height, int fps) {
+    GstElement *pipeline = gst_pipeline_new("stream_pipeline");
+
+    GstElement *appsrc      = gst_element_factory_make("appsrc", "stream_appsrc");
+    GstElement *videoconvert= gst_element_factory_make("videoconvert", nullptr);
+    GstElement *encoder     = gst_element_factory_make("x264enc", nullptr);
+    GstElement *pay         = gst_element_factory_make("rtph264pay", nullptr);
+    GstElement *udpsink     = gst_element_factory_make("udpsink", nullptr);
+
+    if (!pipeline || !appsrc || !videoconvert || !encoder || !pay || !udpsink) {
+        g_printerr("Failed to create stream elements\n");
+        return nullptr;
+    }
+
+    // Configure appsrc
+    GstCaps *caps = gst_caps_new_simple(
+        "video/x-raw",
+        "format", G_TYPE_STRING, "RGB",
+        "width", G_TYPE_INT, width,
+        "height", G_TYPE_INT, height,
+        "framerate", GST_TYPE_FRACTION, fps, 1,
+        nullptr);
+
+    g_object_set(appsrc,
+        "caps", caps,
+        "is-live", TRUE,
+        "format", GST_FORMAT_TIME,
+        "do-timestamp", TRUE,
+        nullptr);
+    gst_caps_unref(caps);
+
+    g_object_set(encoder,
+        "tune", 0x00000004, // zerolatency
+        "speed-preset", 1,  // ultrafast
+        "bitrate", 800,
+        nullptr);
+
+    g_object_set(udpsink,
+        "host", "192.168.1.81",  // CHANGE ME
+        "port", 5000,
+        nullptr);
+
+    gst_bin_add_many(GST_BIN(pipeline),
+        appsrc, videoconvert, encoder, pay, udpsink, nullptr);
+
+    if (!gst_element_link_many(
+            appsrc, videoconvert, encoder, pay, udpsink, nullptr)) {
+        g_printerr("Failed to link stream pipeline\n");
+        gst_object_unref(pipeline);
+        return nullptr;
+    }
+
+    stream_appsrc = appsrc;
+    return pipeline;
+}
+
 
 static GstElement *initPipeline() {
     // Create the pipeline
@@ -130,6 +210,17 @@ int main(int argc, char **argv) {
     // Create pipeline
     std::unique_ptr<GstElement, void(*)(GstElement*)> pipeline(initPipeline(),
         [](GstElement *p){ if (p) gst_object_unref(p); });
+
+    if (enable_streaming) {
+        stream_pipeline = initStreamPipeline(640, 480, 30);
+        if (!stream_pipeline) {
+            g_printerr("Failed to init stream pipeline\n");
+            return -1;
+        }
+
+        gst_element_set_state(stream_pipeline, GST_STATE_PLAYING);
+        g_print("Streaming pipeline PLAYING\n");
+    }
 
     GMainLoop *loop = g_main_loop_new(nullptr, FALSE);
     if (!loop) {
