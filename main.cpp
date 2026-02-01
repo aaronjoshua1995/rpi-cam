@@ -111,19 +111,22 @@ static GstFlowReturn pullSample(GstAppSink *appsink, gpointer user_data) {
 static GstElement *initStreamPipeline(int width, int height, int fps) {
     GstElement *pipeline = gst_pipeline_new("stream_pipeline");
 
-    GstElement *appsrc      = gst_element_factory_make("appsrc", "stream_appsrc");
-    GstElement *videoconvert= gst_element_factory_make("videoconvert", nullptr);
-    GstElement *encoder     = gst_element_factory_make("x264enc", nullptr);
-    GstElement *pay         = gst_element_factory_make("rtph264pay", nullptr);
-    GstElement *udpsink     = gst_element_factory_make("udpsink", nullptr);
+    GstElement *appsrc       = gst_element_factory_make("appsrc", "stream_appsrc");
+    GstElement *videoconvert = gst_element_factory_make("videoconvert", nullptr);
+    GstElement *capsfilter   = gst_element_factory_make("capsfilter", nullptr);
+    GstElement *encoder      = gst_element_factory_make("x264enc", nullptr);
+    GstElement *parser       = gst_element_factory_make("h264parse", nullptr);
+    GstElement *pay          = gst_element_factory_make("rtph264pay", nullptr);
+    GstElement *udpsink      = gst_element_factory_make("udpsink", nullptr);
 
-    if (!pipeline || !appsrc || !videoconvert || !encoder || !pay || !udpsink) {
+    if (!pipeline || !appsrc || !videoconvert || !capsfilter ||
+        !encoder || !parser || !pay || !udpsink) {
         g_printerr("Failed to create stream elements\n");
         return nullptr;
     }
 
-    // Configure appsrc
-    GstCaps *caps = gst_caps_new_simple(
+    /* ---------- appsrc caps (must match OpenCV frames) ---------- */
+    GstCaps *src_caps = gst_caps_new_simple(
         "video/x-raw",
         "format", G_TYPE_STRING, "BGR",
         "width", G_TYPE_INT, width,
@@ -132,29 +135,62 @@ static GstElement *initStreamPipeline(int width, int height, int fps) {
         nullptr);
 
     g_object_set(appsrc,
-        "caps", caps,
+        "caps", src_caps,
         "is-live", TRUE,
         "format", GST_FORMAT_TIME,
         "do-timestamp", TRUE,
         nullptr);
-    gst_caps_unref(caps);
+    gst_caps_unref(src_caps);
 
+    /* ---------- Force I420 for x264enc ---------- */
+    GstCaps *i420_caps = gst_caps_new_simple(
+        "video/x-raw",
+        "format", G_TYPE_STRING, "I420",
+        nullptr);
+
+    g_object_set(capsfilter, "caps", i420_caps, nullptr);
+    gst_caps_unref(i420_caps);
+
+    /* ---------- Encoder ---------- */
     g_object_set(encoder,
-        "tune", 0x00000004, // zerolatency
-        "speed-preset", 1,  // ultrafast
+        "tune", 0x00000004,      // zerolatency
+        "speed-preset", 1,       // ultrafast
+        "key-int-max", fps,      // one keyframe per second
         "bitrate", 800,
         nullptr);
 
+    /* ---------- RTP payloader ---------- */
+    g_object_set(pay,
+        "config-interval", 1,    // VERY IMPORTANT
+        "pt", 96,
+        nullptr);
+
+    /* ---------- UDP sink ---------- */
     g_object_set(udpsink,
         "host", "192.168.1.70",  // CHANGE ME
         "port", 5000,
+        "sync", FALSE,
         nullptr);
 
     gst_bin_add_many(GST_BIN(pipeline),
-        appsrc, videoconvert, encoder, pay, udpsink, nullptr);
+        appsrc,
+        videoconvert,
+        capsfilter,
+        encoder,
+        parser,
+        pay,
+        udpsink,
+        nullptr);
 
     if (!gst_element_link_many(
-            appsrc, videoconvert, encoder, pay, udpsink, nullptr)) {
+            appsrc,
+            videoconvert,
+            capsfilter,
+            encoder,
+            parser,
+            pay,
+            udpsink,
+            nullptr)) {
         g_printerr("Failed to link stream pipeline\n");
         gst_object_unref(pipeline);
         return nullptr;
@@ -163,7 +199,6 @@ static GstElement *initStreamPipeline(int width, int height, int fps) {
     stream_appsrc = appsrc;
     return pipeline;
 }
-
 
 static GstElement *initPipeline() {
     // Create the pipeline
