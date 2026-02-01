@@ -69,7 +69,8 @@ static GstFlowReturn pullSample(GstAppSink *appsink, gpointer user_data) {
     g_print("Mapped sample buffer");
 
     // OpenCV
-    cv::Mat frame(height, width, CV_8UC3, map.data);
+    cv::Mat frame_ro(height, width, CV_8UC3, map.data);
+    cv::Mat frame = frame_ro.clone();   // OWNED memory
     g_print("Converted map data to frame");
 
     // Convert to grayscale
