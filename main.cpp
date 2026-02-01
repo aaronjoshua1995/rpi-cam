@@ -134,9 +134,9 @@ static GstElement *initStreamPipeline(int width, int height, int fps) {
     GstCaps *src_caps = gst_caps_new_simple(
         "video/x-raw",
         "format", G_TYPE_STRING, "BGR",
-        "width", G_TYPE_INT, width,
-        "height", G_TYPE_INT, height,
-        "framerate", GST_TYPE_FRACTION, fps, 1,
+        "width", G_TYPE_INT, CAPTURE_WIDTH,
+        "height", G_TYPE_INT, CAPTURE_HEIGHT,
+        "framerate", GST_TYPE_FRACTION, CAPTURE_FPS, 1,
         nullptr);
 
     g_object_set(appsrc,
@@ -150,7 +150,10 @@ static GstElement *initStreamPipeline(int width, int height, int fps) {
     /* ---------- Force I420 for x264enc ---------- */
     GstCaps *i420_caps = gst_caps_new_simple(
         "video/x-raw",
-        "format", G_TYPE_STRING, "I420",
+        "format", G_TYPE_STRING, "NV12",
+        "width", G_TYPE_INT, CAPTURE_WIDTH,
+        "height", G_TYPE_INT, CAPTURE_HEIGHT,
+        "framerate", GST_TYPE_FRACTION, CAPTURE_FPS, 1,
         nullptr);
 
     g_object_set(capsfilter, "caps", i420_caps, nullptr);
