@@ -161,7 +161,7 @@ static GstElement *initStreamPipeline(int width, int height, int fps) {
 
     /* ---------- Encoder ---------- */
     g_object_set(G_OBJECT(encoder),
-        "extra-controls", "controls,video_bitrate=2000000",
+        "extra-controls", "controls,video_bitrate=200000",
         NULL);
 
     // g_object_set(encoder,
