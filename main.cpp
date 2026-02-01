@@ -6,6 +6,10 @@
 #include <opencv2/objdetect.hpp>
 #include <memory>
 
+const int CAPTURE_FPS = 30;
+const int CAPTURE_WIDTH = 640;
+const int CAPTURE_HEIGHT = 480;
+
 static GstElement *stream_pipeline = nullptr;
 static GstElement *stream_appsrc   = nullptr;
 static gboolean    enable_streaming = TRUE;  // ← toggle this
@@ -24,7 +28,7 @@ static inline void pushFrameToStream(const cv::Mat &frame)
 
     GST_BUFFER_PTS(buffer) = gst_util_get_timestamp();
     GST_BUFFER_DURATION(buffer) =
-        gst_util_uint64_scale_int(1, GST_SECOND, 30);
+        gst_util_uint64_scale_int(1, GST_SECOND, CAPTURE_FPS);
 
     gst_app_src_push_buffer(GST_APP_SRC(stream_appsrc), buffer);
 }
@@ -115,7 +119,7 @@ static GstElement *initStreamPipeline(int width, int height, int fps) {
     GstElement *appsrc       = gst_element_factory_make("appsrc", "stream_appsrc");
     GstElement *videoconvert = gst_element_factory_make("videoconvert", nullptr);
     GstElement *capsfilter   = gst_element_factory_make("capsfilter", nullptr);
-    GstElement *encoder      = gst_element_factory_make("x264enc", nullptr);
+    GstElement *encoder      = gst_element_factory_make("v4l2h264enc", nullptr);
     GstElement *parser       = gst_element_factory_make("h264parse", nullptr);
     GstElement *pay          = gst_element_factory_make("rtph264pay", nullptr);
     GstElement *udpsink      = gst_element_factory_make("udpsink", nullptr);
@@ -153,12 +157,16 @@ static GstElement *initStreamPipeline(int width, int height, int fps) {
     gst_caps_unref(i420_caps);
 
     /* ---------- Encoder ---------- */
-    g_object_set(encoder,
-        "tune", 0x00000004,      // zerolatency
-        "speed-preset", 1,       // ultrafast
-        "key-int-max", fps,      // one keyframe per second
-        "bitrate", 800,
-        nullptr);
+    g_object_set(G_OBJECT(encoder),
+        "extra-controls", "controls,video_bitrate=2000000",
+        NULL);
+
+    // g_object_set(encoder,
+    //     "tune", 0x00000004,      // zerolatency
+    //     "speed-preset", 1,       // ultrafast
+    //     "key-int-max", fps,      // one keyframe per second
+    //     "bitrate", 800,
+    //     nullptr);
 
     /* ---------- RTP payloader ---------- */
     g_object_set(pay,
@@ -231,9 +239,9 @@ static GstElement *initPipeline() {
     GstCaps *caps = gst_caps_new_simple(
         "video/x-raw",
         "format", G_TYPE_STRING, "BGR",
-        "width", G_TYPE_INT, 640,
-        "height", G_TYPE_INT, 480,
-        "framerate", GST_TYPE_FRACTION, 30, 1,
+        "width", G_TYPE_INT, CAPTURE_WIDTH,
+        "height", G_TYPE_INT, CAPTURE_HEIGHT,
+        "framerate", GST_TYPE_FRACTION, CAPTURE_FPS, 1,
         nullptr);
     g_object_set(capsfilter, "caps", caps, nullptr);
     gst_caps_unref(caps);
@@ -282,7 +290,7 @@ int main(int argc, char **argv) {
     gst_init(&argc, &argv);
 
     if (enable_streaming) {
-        stream_pipeline = initStreamPipeline(640, 480, 30);
+        stream_pipeline = initStreamPipeline(CAPTURE_WIDTH, CAPTURE_HEIGHT, CAPTURE_FPS);
         if (!stream_pipeline) {
             g_printerr("Failed to init stream pipeline\n");
             return -1;
