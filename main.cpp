@@ -124,7 +124,7 @@ static GstElement *initStreamPipeline(int width, int height, int fps) {
     // Configure appsrc
     GstCaps *caps = gst_caps_new_simple(
         "video/x-raw",
-        "format", G_TYPE_STRING, "RGB",
+        "format", G_TYPE_STRING, "BGR",
         "width", G_TYPE_INT, width,
         "height", G_TYPE_INT, height,
         "framerate", GST_TYPE_FRACTION, fps, 1,
@@ -187,7 +187,7 @@ static GstElement *initPipeline() {
     // Preferred format for v4l2h264enc is NV12. Keep resolution/framerate reasonable for Pi Zero 2 W.
     GstCaps *caps = gst_caps_new_simple(
         "video/x-raw",
-        "format", G_TYPE_STRING, "RGB",
+        "format", G_TYPE_STRING, "BGR",
         "width", G_TYPE_INT, 640,
         "height", G_TYPE_INT, 480,
         "framerate", GST_TYPE_FRACTION, 30, 1,
@@ -207,7 +207,19 @@ static GstElement *initPipeline() {
     gst_app_sink_set_drop(GST_APP_SINK(appsink), TRUE);
     gst_app_sink_set_max_buffers(GST_APP_SINK(appsink), 1);
     // g_signal_connect(appsink, "new-sample", G_CALLBACK(pullSample), &face_cascade);
-    g_signal_connect(appsink, "new-sample", G_CALLBACK(pullSample), nullptr);
+
+    GstAppSinkCallbacks callbacks = {
+        nullptr,
+        nullptr,
+        pullSample
+    };
+    gst_app_sink_set_callbacks(
+        GST_APP_SINK(appsink),
+        &callbacks,
+        nullptr,
+        nullptr
+    );
+    // g_signal_connect(appsink, "new-sample", G_CALLBACK(pullSample), nullptr);
 
     g_print("Created main pipeline\n");
 
