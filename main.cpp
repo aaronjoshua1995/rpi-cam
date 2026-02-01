@@ -135,40 +135,45 @@ static GstElement *initStreamPipeline(int width, int height, int fps) {
     }
 
     // Set appsrc properties
-    g_object_set(G_OBJECT(appsrc),
-        "stream-type", 0,       // GST_APP_STREAM_TYPE_STREAM
-        "format", GST_FORMAT_TIME,
-        "is-live", TRUE,
-        nullptr);
-
-    /* ---------- appsrc caps (must match OpenCV frames) ---------- */
-    GstCaps *src_caps = gst_caps_new_simple(
-        "video/x-raw",
-        "format", G_TYPE_STRING, "BGR",
-        "width", G_TYPE_INT, CAPTURE_WIDTH,
-        "height", G_TYPE_INT, CAPTURE_HEIGHT,
-        "framerate", GST_TYPE_FRACTION, CAPTURE_FPS, 1,
-        nullptr);
-
-    g_object_set(appsrc,
-        "caps", src_caps,
-        "is-live", TRUE,
-        "format", GST_FORMAT_TIME,
-        "do-timestamp", TRUE,
-        nullptr);
-    gst_caps_unref(src_caps);
-
-    /* ---------- Force I420 for x264enc ---------- */
-    GstCaps *i420_caps = gst_caps_new_simple(
+    GstCaps *caps = gst_caps_new_simple(
         "video/x-raw",
         "format", G_TYPE_STRING, "I420",
-        "width", G_TYPE_INT, CAPTURE_WIDTH,
-        "height", G_TYPE_INT, CAPTURE_HEIGHT,
-        "framerate", GST_TYPE_FRACTION, CAPTURE_FPS, 1,
-        nullptr);
+        "width", G_TYPE_INT, 640,
+        "height", G_TYPE_INT, 480,
+        "framerate", GST_TYPE_FRACTION, 30, 1,
+        NULL
+    );
+    gst_app_src_set_caps(GST_APP_SRC(appsrc), caps);
+    gst_caps_unref(caps);
 
-    g_object_set(capsfilter, "caps", i420_caps, nullptr);
-    gst_caps_unref(i420_caps);
+    /* ---------- appsrc caps (must match OpenCV frames) ---------- */
+    // GstCaps *src_caps = gst_caps_new_simple(
+    //     "video/x-raw",
+    //     "format", G_TYPE_STRING, "BGR",
+    //     "width", G_TYPE_INT, CAPTURE_WIDTH,
+    //     "height", G_TYPE_INT, CAPTURE_HEIGHT,
+    //     "framerate", GST_TYPE_FRACTION, CAPTURE_FPS, 1,
+    //     nullptr);
+
+    // g_object_set(appsrc,
+    //     "caps", src_caps,
+    //     "is-live", TRUE,
+    //     "format", GST_FORMAT_TIME,
+    //     "do-timestamp", TRUE,
+    //     nullptr);
+    // gst_caps_unref(src_caps);
+
+    /* ---------- Force I420 for x264enc ---------- */
+    // GstCaps *i420_caps = gst_caps_new_simple(
+    //     "video/x-raw",
+    //     "format", G_TYPE_STRING, "I420",
+    //     "width", G_TYPE_INT, CAPTURE_WIDTH,
+    //     "height", G_TYPE_INT, CAPTURE_HEIGHT,
+    //     "framerate", GST_TYPE_FRACTION, CAPTURE_FPS, 1,
+    //     nullptr);
+
+    // g_object_set(capsfilter, "caps", i420_caps, nullptr);
+    // gst_caps_unref(i420_caps);
 
     /* ---------- Encoder ---------- */
     g_object_set(G_OBJECT(encoder),
@@ -183,10 +188,10 @@ static GstElement *initStreamPipeline(int width, int height, int fps) {
     //     nullptr);
 
     /* ---------- RTP payloader ---------- */
-    g_object_set(pay,
-        "config-interval", 1,    // VERY IMPORTANT
-        "pt", 96,
-        nullptr);
+    // g_object_set(pay,
+    //     "config-interval", 1,    // VERY IMPORTANT
+    //     "pt", 96,
+    //     nullptr);
 
     /* ---------- UDP sink ---------- */
     g_object_set(udpsink,
