@@ -1,6 +1,7 @@
 #include <gst/gst.h>
 #include <gst/app/gstappsink.h>
 #include <gst/app/gstappsrc.h>
+#include <gst/video/video.h>   // for GST_VIDEO_FLIP_METHOD_*
 #include <opencv2/opencv.hpp>
 #include <opencv2/objdetect.hpp>
 #include <memory>
@@ -209,16 +210,22 @@ static GstElement *initPipeline() {
     }
 
     // Create elements to populate the pipeline
-    GstElement *source = gst_element_factory_make("libcamerasrc", "camerasrc");
+    GstElement *source = gst_element_factory_make("libcamerasrc", "maincamerasrc");
+    GstElement *videoflip = gst_element_factory_make("videoflip", "mainvideoflip");
+    GstElement *videoconvert = gst_element_factory_make("videoconvert", "mainvideoconvert");
     GstElement *capsfilter = gst_element_factory_make("capsfilter", "maincaps");
     GstElement *appsink = gst_element_factory_make("appsink", "mainappsink");
     // GstElement *fakesink = gst_element_factory_make("fakesink", "fakesink");
 
-    if (!source || !capsfilter || !appsink) {
+    if (!source || !videoflip || !videoconvert || !capsfilter || !appsink) {
         g_printerr("Failed to create elements.\n");
         gst_object_unref(pipeline);
         return nullptr;
     }
+
+    g_object_set(videoflip, 
+        "method", GST_VIDEO_ORIENTATION_180,
+        nullptr);
 
     // Preferred format for v4l2h264enc is NV12. Keep resolution/framerate reasonable for Pi Zero 2 W.
     GstCaps *caps = gst_caps_new_simple(
@@ -232,7 +239,7 @@ static GstElement *initPipeline() {
     gst_caps_unref(caps);
 
     // Populate the pipeline
-    gst_bin_add_many(GST_BIN(pipeline), source, capsfilter, appsink, nullptr);
+    gst_bin_add_many(GST_BIN(pipeline), source, videoflip, videoconvert, capsfilter, appsink, nullptr);
     if (!gst_element_link_many(source, capsfilter, appsink, nullptr)) {
         g_printerr("Failed to link main elements.\n");
         gst_object_unref(pipeline);
