@@ -204,13 +204,6 @@ int main(int argc, char **argv) {
         return -1;
     }
 
-    // Initialize GStreamer
-    gst_init(&argc, &argv);
-
-    // Create pipeline
-    std::unique_ptr<GstElement, void(*)(GstElement*)> pipeline(initPipeline(),
-        [](GstElement *p){ if (p) gst_object_unref(p); });
-
     if (enable_streaming) {
         stream_pipeline = initStreamPipeline(640, 480, 30);
         if (!stream_pipeline) {
@@ -221,6 +214,13 @@ int main(int argc, char **argv) {
         gst_element_set_state(stream_pipeline, GST_STATE_PLAYING);
         g_print("Streaming pipeline PLAYING\n");
     }
+
+    // Initialize GStreamer
+    gst_init(&argc, &argv);
+
+    // Create pipeline
+    std::unique_ptr<GstElement, void(*)(GstElement*)> pipeline(initPipeline(),
+        [](GstElement *p){ if (p) gst_object_unref(p); });
 
     GMainLoop *loop = g_main_loop_new(nullptr, FALSE);
     if (!loop) {
