@@ -34,38 +34,48 @@ static GstFlowReturn pullSample(GstAppSink *appsink, gpointer user_data) {
     if (!sample)
         return GST_FLOW_ERROR;
 
+    g_print("Pulled sample");
+
     // Process sample here
     GstCaps *caps = gst_sample_get_caps(sample);
     if (!caps) {
         gst_sample_unref(sample);
         return GST_FLOW_OK;  // or ERROR, your choice
     }
+    g_print("Retrieved caps from sample");
+
 
     GstStructure *s = gst_caps_get_structure(caps, 0);
     if (!s) {
         gst_sample_unref(sample);
         return GST_FLOW_OK;
     }
+    g_print("Retrieved caps from sample");
 
     int width, height;
     gst_structure_get_int(s, "width", &width);
     gst_structure_get_int(s, "height", &height);
+    g_print("Retrieved dimensions from sample");
 
     // Pull the image data
     GstBuffer *buffer = gst_sample_get_buffer(sample);
     GstMapInfo map;
+    g_print("Retrieved sample buffer");
 
     if (!gst_buffer_map(buffer, &map, GST_MAP_READ)) {
         gst_sample_unref(sample);
         return GST_FLOW_ERROR;
     }
+    g_print("Mapped sample buffer");
 
     // OpenCV
     cv::Mat frame(height, width, CV_8UC3, map.data);
+    g_print("Converted map data to frame");
 
     // Convert to grayscale
     cv::Mat gray;
     cv::cvtColor(frame, gray, cv::COLOR_RGB2GRAY);
+    g_print("Converted to grayscale");
 
     // Detect faces
     std::vector<cv::Rect> faces;
@@ -77,7 +87,7 @@ static GstFlowReturn pullSample(GstAppSink *appsink, gpointer user_data) {
         0,
         cv::Size(40, 40)
     );
-    // g_print("Faces detected: %zu\n", faces.size());
+    g_print("Faces detected: %zu\n", faces.size());
 
     // Draw rectangles around the faces (Annotate)
     int i = 0;
