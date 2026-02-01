@@ -240,7 +240,7 @@ static GstElement *initPipeline() {
 
     // Populate the pipeline
     gst_bin_add_many(GST_BIN(pipeline), source, videoflip, videoconvert, capsfilter, appsink, nullptr);
-    if (!gst_element_link_many(source, capsfilter, appsink, nullptr)) {
+    if (!gst_element_link_many(source, videoflip, videoconvert, capsfilter, appsink, nullptr)) {
         g_printerr("Failed to link main elements.\n");
         gst_object_unref(pipeline);
         return nullptr;
