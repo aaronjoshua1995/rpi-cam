@@ -74,7 +74,7 @@ static GstFlowReturn pullSample(GstAppSink *appsink, gpointer user_data) {
 
     // Convert to grayscale
     cv::Mat gray;
-    cv::cvtColor(frame, gray, cv::COLOR_RGB2GRAY);
+    cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
     g_print("Converted to grayscale");
 
     // Detect faces
