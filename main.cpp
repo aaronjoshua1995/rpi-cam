@@ -36,7 +36,16 @@ static GstFlowReturn pullSample(GstAppSink *appsink, gpointer user_data) {
 
     // Process sample here
     GstCaps *caps = gst_sample_get_caps(sample);
+    if (!caps) {
+        gst_sample_unref(sample);
+        return GST_FLOW_OK;  // or ERROR, your choice
+    }
+
     GstStructure *s = gst_caps_get_structure(caps, 0);
+    if (!s) {
+        gst_sample_unref(sample);
+        return GST_FLOW_OK;
+    }
 
     int width, height;
     gst_structure_get_int(s, "width", &width);
