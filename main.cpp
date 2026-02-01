@@ -106,7 +106,10 @@ static GstFlowReturn pullSample(GstAppSink *appsink, gpointer user_data) {
         );
         i++;
     }
-    pushFrameToStream(frame);
+    cv::Mat yuv;
+    cv::cvtColor(frame, yuv, cv::COLOR_BGR2YUV_I420);
+
+    pushFrameToStream(yuv);
 
     gst_buffer_unmap(buffer, &map);
     gst_sample_unref(sample);
@@ -119,8 +122,9 @@ static GstElement *initStreamPipeline(int width, int height, int fps) {
     GstElement *appsrc       = gst_element_factory_make("appsrc", "stream_appsrc");
     GstElement *videoconvert = gst_element_factory_make("videoconvert", nullptr);
     GstElement *capsfilter   = gst_element_factory_make("capsfilter", nullptr);
-    GstElement *encoder      = gst_element_factory_make("v4l2h264enc", nullptr);
+    GstElement *encoder      = gst_element_factory_make("v4l2h264enc", "h264-enc");
     GstElement *parser       = gst_element_factory_make("h264parse", nullptr);
+    GstElement *muxer        = gst_element_factory_make("mpegtsmux", "ts-mux");
     GstElement *pay          = gst_element_factory_make("rtph264pay", nullptr);
     GstElement *udpsink      = gst_element_factory_make("udpsink", nullptr);
 
@@ -129,6 +133,13 @@ static GstElement *initStreamPipeline(int width, int height, int fps) {
         g_printerr("Failed to create stream elements\n");
         return nullptr;
     }
+
+    // Set appsrc properties
+    g_object_set(G_OBJECT(appsrc),
+        "stream-type", 0,       // GST_APP_STREAM_TYPE_STREAM
+        "format", GST_FORMAT_TIME,
+        "is-live", TRUE,
+        nullptr);
 
     /* ---------- appsrc caps (must match OpenCV frames) ---------- */
     GstCaps *src_caps = gst_caps_new_simple(
@@ -150,7 +161,7 @@ static GstElement *initStreamPipeline(int width, int height, int fps) {
     /* ---------- Force I420 for x264enc ---------- */
     GstCaps *i420_caps = gst_caps_new_simple(
         "video/x-raw",
-        "format", G_TYPE_STRING, "NV12",
+        "format", G_TYPE_STRING, "I420",
         "width", G_TYPE_INT, CAPTURE_WIDTH,
         "height", G_TYPE_INT, CAPTURE_HEIGHT,
         "framerate", GST_TYPE_FRACTION, CAPTURE_FPS, 1,
@@ -186,21 +197,23 @@ static GstElement *initStreamPipeline(int width, int height, int fps) {
 
     gst_bin_add_many(GST_BIN(pipeline),
         appsrc,
-        videoconvert,
-        capsfilter,
+        // videoconvert,
+        // capsfilter,
         encoder,
-        parser,
-        pay,
+        // parser,
+        muxer,
+        // pay,
         udpsink,
         nullptr);
 
     if (!gst_element_link_many(
             appsrc,
-            videoconvert,
-            capsfilter,
+            // videoconvert,
+            // capsfilter,
             encoder,
-            parser,
-            pay,
+            // parser,
+            muxer,
+            // pay,
             udpsink,
             nullptr)) {
         g_printerr("Failed to link stream pipeline\n");
