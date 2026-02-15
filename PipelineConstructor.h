@@ -28,6 +28,14 @@ public:
   static GstElement* get_fakesink_element(std::string name);
 
   /**
+   * @brief Get the autovideosink element object
+   *
+   * @param name Name of the element
+   * @return GstElement*
+   */
+  static GstElement* get_autovideosink_element(std::string name);
+
+  /**
    * @brief Get the tee element object
    *
    * @param name Name of the element

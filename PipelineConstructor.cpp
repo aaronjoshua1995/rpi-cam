@@ -53,6 +53,11 @@ GstElement* PipelineConstructor::get_fakesink_element(std::string name) {
   return sink;
 }
 
+GstElement* PipelineConstructor::get_autovideosink_element(std::string name) {
+  GstElement* sink = gst_element_factory_make("autovideosink", name.c_str());
+  return sink;
+}
+
 GstElement* PipelineConstructor::get_tee_element(std::string name) {
   GstElement* tee = gst_element_factory_make("tee", name.c_str());
   return tee;

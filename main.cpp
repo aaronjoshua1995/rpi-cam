@@ -18,7 +18,7 @@ static GstElement* initPipeline() {
   constructor.get_libcamerasrc_element(&pipeline, "src", 640, 480, 30, "YUV2",
                                         GST_VIDEO_ORIENTATION_IDENTITY);
 //   pipeline.addElement(constructor.get_videotestsrc_element("testsrc"));
-  pipeline.addElement(constructor.get_fakesink_element("fakesink"));
+  pipeline.addElement(constructor.get_autovideosink_element("videosink"));
   g_print("Created elements\n");
 
   // Populate the pipeline
