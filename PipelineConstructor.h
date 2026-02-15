@@ -36,6 +36,22 @@ public:
   static GstElement* get_autovideosink_element(std::string name);
 
   /**
+   * @brief Get the waylandsink element object
+   *
+   * @param name Name of the element
+   * @return GstElement*
+   */
+  static GstElement* get_waylandsink_element(std::string name);
+
+  /**
+   * @brief Get the fpsdisplaysink element object
+   *
+   * @param name Name of the element
+   * @return GstElement*
+   */
+  static GstElement* get_fpsdisplaysink_element(std::string name);
+
+  /**
    * @brief Get the tee element object
    *
    * @param name Name of the element

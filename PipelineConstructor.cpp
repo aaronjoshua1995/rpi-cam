@@ -58,6 +58,18 @@ GstElement* PipelineConstructor::get_autovideosink_element(std::string name) {
   return sink;
 }
 
+GstElement* PipelineConstructor::get_waylandsink_element(std::string name) {
+  GstElement* sink = gst_element_factory_make("waylandsink", name.c_str());
+  return sink;
+}
+
+GstElement* PipelineConstructor::get_fpsdisplaysink_element(std::string name) {
+  GstElement* sink = gst_element_factory_make("autovideosink", name.c_str());
+  g_object_set(sink, "video-sink", "xvimagessink", "scheduling-algorithm", 1,
+               "sync", FALSE,"text-overlay", FALSE, nullptr);
+  return sink;
+}
+
 GstElement* PipelineConstructor::get_tee_element(std::string name) {
   GstElement* tee = gst_element_factory_make("tee", name.c_str());
   return tee;
