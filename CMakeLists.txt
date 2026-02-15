@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(RPI-NETWORK-STREAM)
+project(RPI-CAM)
 
 set(CMAKE_CXX_STANDARD 20)
 
@@ -23,11 +23,11 @@ include_directories(
 
 file(GLOB SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/functions/*.cpp"
+    # "${CMAKE_CURRENT_SOURCE_DIR}/network/*.cpp"
 )
 file(GLOB HEADERS
     "${CMAKE_CURRENT_SOURCE_DIR}/*.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/functions/*.h"
+    # "${CMAKE_CURRENT_SOURCE_DIR}/network/*.h"
 )
 
 # add_executable(record main.cpp ConfigDefaults.h ConfigDefaults.cpp SSHTunnel.h SSHTunnel.cpp VideoStream.h VideoStream.cpp MotionDetector.h MotionDetector.cpp)
