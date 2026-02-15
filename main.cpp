@@ -29,15 +29,18 @@ static GstElement* initPipeline() {
     gst_bin_add(GST_BIN(p), element);
   }
 
-  int i = 0;
-  for (auto element : elements) {
-    GstElement* other = nullptr;
-    if (i < elements.size() - 1) {
-      other = elements.at(i + 1);
-    }
-    if (!gst_element_link(element, other)) {
-      g_printerr("Failed to link elements.\n");
-      gst_object_unref(p);
+  for (size_t i = 0; i < elements.size() - 1; ++i) {
+    GstElement* src = elements[i];
+    GstElement* dst = elements[i + 1];
+    if (!gst_element_link(src, dst)) {
+      g_printerr("Failed to link %s -> %s\n", 
+                 GST_ELEMENT_NAME(src),
+                 GST_ELEMENT_NAME(dst));
+      // Optionally clean up and exit
+      for (auto e : elements) {
+        gst_object_unref(e);
+      }
+      break;
     }
   }
 
