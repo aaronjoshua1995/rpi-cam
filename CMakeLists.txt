@@ -5,9 +5,9 @@ set(CMAKE_CXX_STANDARD 20)
 
 find_package(PkgConfig REQUIRED)
 
-pkg_check_modules(LIBSSH REQUIRED libssh)
+# pkg_check_modules(LIBSSH REQUIRED libssh)
 
-pkg_check_modules(OpenCV REQUIRED opencv4)
+# pkg_check_modules(OpenCV REQUIRED opencv4)
 
 # Find both GStreamer and RTSP Server
 pkg_check_modules(GST REQUIRED
@@ -45,9 +45,9 @@ target_link_directories(record PRIVATE ${GST_LIBRARY_DIRS})
 target_link_libraries(record ${GST_LIBRARIES})
 
 # Required include dirs
-target_include_directories(record PRIVATE ${OpenCV_INCLUDE_DIRS})
-target_link_directories(record PRIVATE ${OpenCV_LIBRARY_DIRS})
-target_link_libraries(record ${OpenCV_LIBRARIES})
+# target_include_directories(record PRIVATE ${OpenCV_INCLUDE_DIRS})
+# target_link_directories(record PRIVATE ${OpenCV_LIBRARY_DIRS})
+# target_link_libraries(record ${OpenCV_LIBRARIES})
 
 # Ensure compiler sees the right flags
 target_compile_options(record PRIVATE ${GST_CFLAGS_OTHER})
