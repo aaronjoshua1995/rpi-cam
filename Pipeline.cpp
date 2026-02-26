@@ -134,7 +134,6 @@ GstElement* Pipeline::construct() {
             gst_object_unref(pipeline);
             return nullptr;
           }
-          gst_element_release_request_pad(pe.element, sinkPad);
           gst_object_unref(srcPad);
           gst_object_unref(sinkPad);
 
