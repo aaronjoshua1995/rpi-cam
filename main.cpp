@@ -104,10 +104,10 @@ int main(int argc, char** argv) {
     pipeline.addElement(pe);
   }
 
-  std::vector<GstElement*> dBypassBranch = {dBypassQ};
+  std::vector<GstElement*> dBypassBranch = {dBypassQ, dHailomuxer};
   std::vector<GstElement*> dInferBranch = {
-    dVideoscale, dCaps, dPreFdInferQ, fdHailonet, fdPostQ, fdHailofilter, dPostFilterQ
-  };
+      dVideoscale, dCaps,         dPreFdInferQ, fdHailonet,
+      fdPostQ,     fdHailofilter, dPostFilterQ, dHailomuxer};
   pe = PipelineElement();
   pe.element = dTee;
   pe.branches.push_back(dBypassBranch);
@@ -115,9 +115,9 @@ int main(int argc, char** argv) {
   pipeline.addElement(pe);
 
   // TODO: Connect both branches to the muxer sink pads
-  pe = PipelineElement();
-  pe.element = dHailomuxer;
-  pipeline.addElement(pe);
+  // pe = PipelineElement();
+  // pe.element = dHailomuxer;
+  // pipeline.addElement(pe);
 
   std::vector<GstElement*> fTrackerPipeline = {frPreQ, frHailotracker, crPreQ};
   for (GstElement* elem : fTrackerPipeline) {
@@ -127,9 +127,9 @@ int main(int argc, char** argv) {
   }
 
   std::vector<GstElement*> crBypassBranch = {crBypassQ, crAggegrator};
-  std::vector<GstElement*> crPipeline = {
-    alPreQ, alHailofilter, rPreQ, rHailonet, rPreAggQ, rHailoFilter, rPostAggQ
-  };
+  std::vector<GstElement*> crPipeline = {alPreQ,    alHailofilter, rPreQ,
+                                         rHailonet, rPreAggQ,      rHailoFilter,
+                                         rPostAggQ, crAggegrator};
   pe = PipelineElement();
   pe.element = crHailocropper;
   pe.branches.push_back(crBypassBranch);
@@ -137,9 +137,9 @@ int main(int argc, char** argv) {
   pipeline.addElement(pe);
 
   // TODO: Connect both branches to the aggegrator sink pads
-  pe = PipelineElement();
-  pe.element = crAggegrator;
-  pipeline.addElement(pe);
+  // pe = PipelineElement();
+  // pe.element = crAggegrator;
+  // pipeline.addElement(pe);
 
   GstElement* p = pipeline.construct();
   if (!p) {
