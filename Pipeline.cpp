@@ -1,4 +1,6 @@
 #include "Pipeline.h"
+#include <string>
+#include <iostream>
 
 void Pipeline::addElement(const PipelineElement& element) {
   mElements.push_back(element);
@@ -96,6 +98,7 @@ GstElement* Pipeline::construct() {
       if (lastBranchElementsSame) {
         // Link the second to last elements src pads to the last elements sink
         // pads
+        int x = 0;
         for (const auto& branch: pe.branches) {
           auto elementToMerge = branch[branch.size() - 2];
           // Always use the last element of the first branch, as that one is added to the 
@@ -113,11 +116,16 @@ GstElement* Pipeline::construct() {
           }
           GstPad* sinkPad = gst_element_request_pad_simple(lastElement, "sink_%u");
           if (!sinkPad) {
-            g_printerr("Failed to get sinkPad of branch's last element\n");
-            gst_element_release_request_pad(pe.element, srcPad);
-            gst_object_unref(srcPad);
-            gst_object_unref(pipeline);
-            return nullptr;
+            std::string sinkPadName = " sink_" + std::to_string(x);
+            std::cout << "SELECTING SINKPAD: " << sinkPadName << std::endl;
+            sinkPad = gst_element_get_static_pad(lastElement, sinkPadName.c_str());
+            if (!sinkPad) {
+              g_printerr("Failed to get sinkPad of branch's last element\n");
+              gst_element_release_request_pad(pe.element, srcPad);
+              gst_object_unref(srcPad);
+              gst_object_unref(pipeline);
+              return nullptr;
+            }
           }
           if (gst_pad_link(srcPad, sinkPad) != GST_PAD_LINK_OK) {
             g_printerr("Failed to link\n");
@@ -131,6 +139,7 @@ GstElement* Pipeline::construct() {
           gst_object_unref(srcPad);
           gst_object_unref(sinkPad);
 
+          x++;
         }
       }
     }
