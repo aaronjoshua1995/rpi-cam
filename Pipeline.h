@@ -1,23 +1,22 @@
-#ifndef PIPELINE_H
-#define PIPELINE_H
-
-#include <gst/gst.h>
+#pragma once
 
 #include <vector>
+#include <gst/gst.h>
+
+struct PipelineElement {
+  GstElement* element;
+  std::vector<std::vector<GstElement*>> branches = {};  // Each branch is a vector of elements
+};
 
 class Pipeline {
- public:
+public:
   Pipeline() = default;
   ~Pipeline() = default;
 
-  // Add a GstElement to the pipeline container
-  void addElement(GstElement* element);
+  void addElement(const PipelineElement& element);
 
-  // Retrieve all elements (const reference to avoid copy)
-  const std::vector<GstElement*>& getElements() const;
+  GstElement* construct();
 
  private:
-  std::vector<GstElement*> elements;
+  std::vector<PipelineElement> mElements;
 };
-
-#endif  // PIPELINE_H
