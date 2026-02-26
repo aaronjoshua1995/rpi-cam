@@ -84,7 +84,7 @@ GstElement* Pipeline::construct() {
         for (size_t n = 0; n < branch.size() - 1 - x; ++n) {
           g_print("'%s' --> '%s'\n", GST_ELEMENT_NAME(branch[n]),
                   GST_ELEMENT_NAME(branch[n + 1]));
-          if (!gst_element_link(branch[j], branch[n + 1])) {
+          if (!gst_element_link(branch[n], branch[n + 1])) {
             g_printerr("Failed to link elements within branch\n");
             gst_object_unref(pipeline);
             return nullptr;
