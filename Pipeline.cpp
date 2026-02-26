@@ -40,7 +40,7 @@ GstElement* Pipeline::construct() {
         if (j == 0) {
           lastElement = branch.back();
         } else if (lastElement != branch.back()) {
-          lastBranchElementsSame = FALSE;
+          lastBranchElementsSame = FALSE; 
           break;
         }
       }
@@ -98,7 +98,9 @@ GstElement* Pipeline::construct() {
         // pads
         for (const auto& branch: pe.branches) {
           auto elementToMerge = branch[branch.size() - 2];
-          auto lastElement = branch.back();
+          // Always use the last element of the first branch, as that one is added to the 
+          // GST BIN, which is required to get the pads.
+          auto lastElement = pe.branches[0].back();
 
           g_print("'src: %s' --> snk: '%s'\n", GST_ELEMENT_NAME(elementToMerge),
                   GST_ELEMENT_NAME(lastElement));
