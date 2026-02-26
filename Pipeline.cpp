@@ -108,32 +108,20 @@ GstElement* Pipeline::construct() {
           g_print("'src: %s' --> snk: '%s'\n", GST_ELEMENT_NAME(elementToMerge),
                   GST_ELEMENT_NAME(lastElement));
 
-          GstIterator* it = gst_element_iterate_sink_pads(lastElement);
-          GValue item = G_VALUE_INIT;
-
-          while (gst_iterator_next(it, &item) == GST_ITERATOR_OK) {
-            GstPad* pad = GST_PAD(g_value_get_object(&item));
-            g_print("Sink pad: %s\n", GST_PAD_NAME(pad));
-            g_value_reset(&item);
-          }
-
-          g_value_unset(&item);
-          gst_iterator_free(it);
-
           GstPad* srcPad = gst_element_get_static_pad(elementToMerge, "src");
           if (!srcPad) {
             g_printerr("Failed to request srcPad from second-to-last branch element\n");
             gst_object_unref(pipeline);
             return nullptr;
           }
+
           GstPad* sinkPad = gst_element_request_pad_simple(lastElement, "sink_%u");
           if (!sinkPad) {
-            std::string sinkPadName = " sink_" + std::to_string(x);
+            std::string sinkPadName = "sink_" + std::to_string(x);
             std::cout << "SELECTING SINKPAD: " << sinkPadName << std::endl;
             sinkPad = gst_element_get_static_pad(lastElement, sinkPadName.c_str());
             if (!sinkPad) {
               g_printerr("Failed to get sinkPad of branch's last element\n");
-              gst_element_release_request_pad(pe.element, srcPad);
               gst_object_unref(srcPad);
               gst_object_unref(pipeline);
               return nullptr;
@@ -141,7 +129,6 @@ GstElement* Pipeline::construct() {
           }
           if (gst_pad_link(srcPad, sinkPad) != GST_PAD_LINK_OK) {
             g_printerr("Failed to link\n");
-            gst_element_release_request_pad(pe.element, srcPad);
             gst_object_unref(srcPad);
             gst_object_unref(sinkPad);
             gst_object_unref(pipeline);
