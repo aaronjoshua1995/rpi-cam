@@ -55,7 +55,7 @@ GstElement* Pipeline::construct() {
         if (!srcPad) {
           // Try static pads
           std::string srcPadName = "src_" + std::to_string(j);
-          srcPad = gst_element_request_pad_simple(pe.element, srcPadName.c_str());
+          srcPad = gst_element_get_static_pad(pe.element, srcPadName.c_str());
           if (!srcPad) {
             g_printerr("Failed to request srcPad\n");
             gst_object_unref(pipeline);
