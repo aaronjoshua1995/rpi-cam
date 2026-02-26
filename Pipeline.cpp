@@ -21,9 +21,6 @@ GstElement* Pipeline::construct() {
     }
   }
 
-
-
-
   // Link elements in the main branch.
   for (int i = 0; i < mElements.size(); ++i) {
     PipelineElement pe = mElements[i];

@@ -126,7 +126,7 @@ int main(int argc, char** argv) {
     pipeline.addElement(pe);
   }
 
-  std::vector<GstElement*> crBypassBranch = {crBypassQ};
+  std::vector<GstElement*> crBypassBranch = {crBypassQ, crAggegrator};
   std::vector<GstElement*> crPipeline = {
     alPreQ, alHailofilter, rPreQ, rHailonet, rPreAggQ, rHailoFilter, rPostAggQ
   };
