@@ -108,6 +108,18 @@ GstElement* Pipeline::construct() {
           g_print("'src: %s' --> snk: '%s'\n", GST_ELEMENT_NAME(elementToMerge),
                   GST_ELEMENT_NAME(lastElement));
 
+          GstIterator* it = gst_element_iterate_sink_pads(lastElement);
+          GValue item = G_VALUE_INIT;
+
+          while (gst_iterator_next(it, &item) == GST_ITERATOR_OK) {
+            GstPad* pad = GST_PAD(g_value_get_object(&item));
+            g_print("Sink pad: %s\n", GST_PAD_NAME(pad));
+            g_value_reset(&item);
+          }
+
+          g_value_unset(&item);
+          gst_iterator_free(it);
+
           GstPad* srcPad = gst_element_get_static_pad(elementToMerge, "src");
           if (!srcPad) {
             g_printerr("Failed to request srcPad from second-to-last branch element\n");
