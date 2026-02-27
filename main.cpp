@@ -71,7 +71,19 @@ int main(int argc, char** argv) {
   GstElement* rPreAggQ = GstFactory::getQueue("recognition_pre_agg_q", 30, 0);
   GstElement* rPostAggQ = GstFactory::getQueue("recognition_post_agg_q", 30, 0);
   GstElement* rHailoFilter = GstFactory::getHailoFilter("face_recognition_hailofilter", FR_SO_PATH, FR_FUNC_NAME, FALSE);
-  // GstElement* gallery = GstFactory::getHailoGallery("gallery", GALLERY_PATH, TRUE, 0.7, "gallery");
+  // Gallery pipeline
+  GstElement* gaPreQ = GstFactory::getQueue("ga_pre_q", 30);
+  GstElement* gaHailoGallery = GstFactory::getHailoGallery("gallery", GALLERY_PATH, 0.4, 20, 1, TRUE);
+  // Drawing pipeline
+  GstElement* drPreQ = GstFactory::getQueue("dr_pre_q", 30);
+  GstElement* drHailoOverlay = GstFactory::getHailoOverlay("hailo_overlay", 5, 2, 8, FALSE, TRUE, TRUE);
+  GstElement* drPreIdentityQ = GstFactory::getQueue("dr_pre_identity_q", 30);
+  GstElement* drIdentity = GstFactory::getIdentity("identity_callback");
+  GstElement* drPostQ = GstFactory::getQueue("dr_post_q", 30);
+  // Sink pipeline
+  GstElement* sinkConvert = GstFactory::getVideoconvert("display_videoconvert", 4, FALSE);
+  GstElement* sinkQ = GstFactory::getQueue("sink_q", 30, 0);
+  GstElement* sink = GstFactory::getFpsDisplaySink("videosink", "xvimagesink", FALSE, FALSE);
 
   GstElement* gstElements[] = {
       source,       caps,         preFlipQ,       videoflip,
@@ -136,6 +148,16 @@ int main(int argc, char** argv) {
   pe.branches.push_back(crPipeline);
   pipeline.addElement(pe);
 
+  std::vector<GstElement*> sinkPipeline = {gaPreQ,         gaHailoGallery,
+                                           drPreQ,         drHailoOverlay,
+                                           drPreIdentityQ, drIdentity,
+                                           drPostQ,        sinkConvert,
+                                           sinkQ,          sink};
+  for (GstElement* elem : fTrackerPipeline) {
+    PipelineElement pe = PipelineElement();
+    pe.element = elem;
+    pipeline.addElement(pe);
+  }
   // TODO: Connect both branches to the aggegrator sink pads
   // pe = PipelineElement();
   // pe.element = crAggegrator;
@@ -146,4 +168,24 @@ int main(int argc, char** argv) {
     g_printerr("Failed to construct pipeline\n");
     return 1;
   }
+
+  GMainLoop* loop = g_main_loop_new(nullptr, FALSE);
+  if (!loop) {
+    g_printerr("Failed to create GMainLoop.\n");
+    return -1;
+  }
+
+  GstStateChangeReturn ret = gst_element_set_state(p, GST_STATE_PLAYING);
+  if (ret == GST_STATE_CHANGE_FAILURE) {
+    g_printerr("Unable to set pipeline to PLAYING");
+    gst_object_unref(p);
+    return 1;
+  }
+  g_print("Pipeline set to PLAYING successfully.\n");
+
+  g_main_loop_run(loop);
+
+  gst_element_set_state(p, GST_STATE_NULL);
+  gst_object_unref(p);
+  gst_deinit();
 }

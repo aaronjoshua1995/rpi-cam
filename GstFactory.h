@@ -31,11 +31,12 @@ public:
                                      int maxFiles = 0,
                                      const std::string& muxer = "mp4mux");
   static GstElement* getTee(const std::string& name);
+  static GstElement* getIdentity(const std::string& name);
   static GstElement* getFakesink(const std::string& name);
   static GstElement* getValve(const std::string& name, const std::string& type);
   static GstElement* getFpsDisplaySink(const std::string& name,
                                        const std::string& videoSink = "xvimagesink",
-                                       const int schedulingAlgorithm = 1, bool sync = false,
+                                       bool sync = false,
                                        bool textOverlay = false);
   static GstElement* getVideoFlip(const std::string& name, GstVideoOrientationMethod method);
   static GstElement* getVideoScale(const std::string& name,
@@ -48,5 +49,12 @@ public:
   static GstElement* getHailoMuxer(const std::string& name);
   static GstElement* getHailoCropper(const std::string& name, const std::string& soPath, const std::string& funcName);
   static GstElement* getHailoAggregator(const std::string& name);
-  static GstElement* getHailoTracker(const std::string& name); 
+  static GstElement* getHailoTracker(const std::string& name);
+  static GstElement* getHailoGallery(const std::string& name,
+                              const std::string& galleryFilePath,
+                              float similarityThreshold, int queueSize,
+                              int classId, bool loadLocalGallery);
+  static GstElement* getHailoOverlay(const std::string& name, int lineThickness,
+                              int fontThickness, int landmarkPointRadius,
+                              bool qos, bool showConfidence, bool localGallery);
 };

@@ -150,7 +150,21 @@ GstElement* GstFactory::getSplitMuxSink(const std::string& name,
 
 GstElement* GstFactory::getTee(const std::string& name) {
   GstElement* elem = gst_element_factory_make("tee", name.c_str());
-  if (!elem) g_printerr("GstFactory: failed to create element 'tee' with name '%s'\n", name.c_str());
+  if (!elem) {
+    g_printerr(
+        "GstFactory: failed to create element 'tee' with name '%s'\n",
+        name.c_str());
+  }
+  return elem;
+}
+
+GstElement* GstFactory::getIdentity(const std::string& name) {
+  GstElement* elem = gst_element_factory_make("identity", name.c_str());
+  if (!elem) {
+    g_printerr(
+        "GstFactory: failed to create element 'identity' with name '%s'\n",
+        name.c_str());
+  }
   return elem;
 }
 
@@ -164,6 +178,22 @@ GstElement* GstFactory::getValve(const std::string& name, const std::string& typ
   GstElement* elem = gst_element_factory_make(type.c_str(), name.c_str());
   if (!elem) g_printerr("GstFactory: failed to create element '%s' with name '%s'\n", type.c_str(), name.c_str());
   return elem;
+}
+
+GstElement* GstFactory::getFpsDisplaySink(const std::string& name,
+                                          const std::string& videoSink,
+                                          bool sync, bool textOverlay) {
+  GstElement* fpsSink = gst_element_factory_make("videoscale", name.c_str());
+  if (!fpsSink) {
+    g_printerr("Failed to create videoscale element\n");
+    return nullptr;
+  }
+  g_object_set(fpsSink,
+              "video-sink", videoSink.c_str(),
+              "sync", sync,
+              "text-overlay", textOverlay,
+              nullptr);
+  return fpsSink;
 }
 
 GstElement* GstFactory::getVideoFlip(const std::string& name,
@@ -193,7 +223,9 @@ GstElement* GstFactory::getVideoScale(const std::string& name,
   return videoscale;
 }
 
-GstElement* GstFactory::getHailoNet(const std::string& name, const std::string& hefPath, int schedulingAlgorithm, int vDeviceKey) {
+GstElement* GstFactory::getHailoNet(const std::string& name,
+                                    const std::string& hefPath,
+                                    int schedulingAlgorithm, int vDeviceKey) {
   GstElement* hailonet = gst_element_factory_make("hailonet", name.c_str());
   if (!hailonet) {
     g_printerr("Failed to create hailonet element\n");
@@ -207,7 +239,9 @@ GstElement* GstFactory::getHailoNet(const std::string& name, const std::string& 
   return hailonet;
 }
 
-GstElement* GstFactory::getHailoFilter(const std::string& name, const std::string& soPath, const std::string& funcName, bool qos) {
+GstElement* GstFactory::getHailoFilter(const std::string& name,
+                                       const std::string& soPath,
+                                       const std::string& funcName, bool qos) {
   GstElement* hailofilter = gst_element_factory_make("hailofilter", name.c_str());
   if (!hailofilter) {
     g_printerr("Failed to create hailofilter element\n");
@@ -230,7 +264,9 @@ GstElement* GstFactory::getHailoMuxer(const std::string& name) {
   return hmux;
 }
 
-GstElement* GstFactory::getHailoCropper(const std::string& name, const std::string& soPath, const std::string& funcName) {
+GstElement* GstFactory::getHailoCropper(const std::string& name,
+                                        const std::string& soPath,
+                                        const std::string& funcName) {
   GstElement* cropper = gst_element_factory_make("hailocropper", name.c_str());
   if (!cropper) {
     g_printerr("Failed to create hailocropper element\n");
@@ -260,15 +296,53 @@ GstElement* GstFactory::getHailoTracker(const std::string& name) {
     return nullptr;
   }
     g_object_set(tracker,
-              "class-id", -1,
-              "kalman-dist-thr", 0.7,
-              "iou-thr", 0.8,
-              "init-iou-thr", 0.9,
-              "keep-new-frames", 2,
-              "keep-tracked-frames", 6,
-              "keep-lost-frames", 8,
-              "keep-past-metadata", TRUE,
-              "qos", FALSE,
-              nullptr);
+      "class-id", -1,
+      "kalman-dist-thr", 0.7,
+      "iou-thr", 0.8,
+      "init-iou-thr", 0.9,
+      "keep-new-frames", 2,
+      "keep-tracked-frames", 6,
+      "keep-lost-frames", 8,
+      "keep-past-metadata", TRUE,
+      "qos", FALSE, nullptr);
   return tracker;
+}
+
+GstElement* GstFactory::getHailoGallery(const std::string& name,
+                                        const std::string& galleryFilePath,
+                                        float similarityThreshold,
+                                        int queueSize, int classId,
+                                        bool loadLocalGallery) {
+  GstElement* gallery = gst_element_factory_make("hailogallery", name.c_str());
+  if (!gallery) {
+    g_printerr("Failed to create hailotracker element\n");
+    return nullptr;
+  }
+  g_object_set(gallery, 
+    "gallery-file-path", galleryFilePath.c_str(), 
+    "load-local-gallery", loadLocalGallery,
+    "similarity-thr", similarityThreshold,
+    "gallery-queue-size", queueSize,
+    "class-id", classId, nullptr);
+  return gallery;
+}
+
+GstElement* GstFactory::getHailoOverlay(const std::string& name,
+                                        int lineThickness, int fontThickness,
+                                        int landmarkPointRadius, bool qos,
+                                        bool showConfidence,
+                                        bool localGallery) {
+  GstElement* overlay = gst_element_factory_make("hailogallery", name.c_str());
+  if (!overlay) {
+    g_printerr("Failed to create hailotracker element\n");
+    return nullptr;
+  }
+  g_object_set(overlay, 
+    "qos", qos, 
+    "show-confidence", showConfidence,
+    "local-gallery", localGallery,
+    "line-thickness", lineThickness,
+    "font-thickness", fontThickness, 
+    "landmark-point-radius", landmarkPointRadius, nullptr);
+  return overlay;
 }
