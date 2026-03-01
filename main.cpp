@@ -196,46 +196,46 @@ int main(int argc, char** argv) {
   pipeline.addElement(pe);
  
   // Display elements
-  for (int i = 0; i < 4; ++i) {
+  for (int i = 0; i < 6; ++i) {
     pe = PipelineElement();
     pe.element = displayElements[i];
     pipeline.addElement(pe);
   }
 
-  GstElement* capsfilter = GstFactory::getCaps("enc_caps", "video/x-raw", "I420", CAPTURE_WIDTH, CAPTURE_HEIGHT, CAPTURE_FPS);
-  GstElement* encode = gst_element_factory_make("openh264enc", "encoder");
-  GstElement* parse  = gst_element_factory_make("h264parse", "parse");
-  GstElement* mux = gst_element_factory_make("mpegtsmux", "mux");
-  GstElement* sink = gst_element_factory_make("udpsink", "udp_sink");
+  // GstElement* capsfilter = GstFactory::getCaps("enc_caps", "video/x-raw", "I420", CAPTURE_WIDTH, CAPTURE_HEIGHT, CAPTURE_FPS);
+  // GstElement* encode = gst_element_factory_make("openh264enc", "encoder");
+  // GstElement* parse  = gst_element_factory_make("h264parse", "parse");
+  // GstElement* mux = gst_element_factory_make("mpegtsmux", "mux");
+  // GstElement* sink = gst_element_factory_make("udpsink", "udp_sink");
 
-  g_object_set(encode,
-             "bitrate", 4000,        // kbps
-             NULL);
+  // g_object_set(encode,
+  //            "bitrate", 4000,        // kbps
+  //            NULL);
 
-  g_object_set(parse,
-             "config-interval", 1,        
-             NULL);
+  // g_object_set(parse,
+  //            "config-interval", 1,        
+  //            NULL);
 
-  g_object_set(sink,
-              "host", "192.168.1.70",  // destination IP
-              "port", 5000,
-              NULL);
+  // g_object_set(sink,
+  //             "host", "192.168.1.70",  // destination IP
+  //             "port", 5000,
+  //             NULL);
 
-  pe = PipelineElement();
-  pe.element = capsfilter;
-  pipeline.addElement(pe);
-  pe = PipelineElement();
-  pe.element = displayQ;
-  pipeline.addElement(pe);
-  pe = PipelineElement();
-  pe.element = encode;
-  pipeline.addElement(pe);
-  pe = PipelineElement();
-  pe.element = mux;
-  pipeline.addElement(pe);
-  pe = PipelineElement();
-  pe.element = sink;
-  pipeline.addElement(pe);
+  // pe = PipelineElement();
+  // pe.element = capsfilter;
+  // pipeline.addElement(pe);
+  // pe = PipelineElement();
+  // pe.element = displayQ;
+  // pipeline.addElement(pe);
+  // pe = PipelineElement();
+  // pe.element = encode;
+  // pipeline.addElement(pe);
+  // pe = PipelineElement();
+  // pe.element = mux;
+  // pipeline.addElement(pe);
+  // pe = PipelineElement();
+  // pe.element = sink;
+  // pipeline.addElement(pe);
 
   // Fakesink for testing
   // pe = PipelineElement();
