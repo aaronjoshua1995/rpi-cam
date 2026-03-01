@@ -11,7 +11,7 @@ const int CAPTURE_WIDTH = 800;
 const int CAPTURE_HEIGHT = 600;
 
 // Base directories
-const std::string MODEL_DIR        = "/home/pi/work/ai/models";
+const std::string MODEL_DIR        = "/home/pi/rpi-cam/models";
 const std::string POST_PROCESS_DIR = "/usr/lib/aarch64-linux-gnu/hailo/tappas/post_processes";
 // Face detection
 const std::string FD_HEF_PATH  = MODEL_DIR + "/retinaface_mobilenet_v1.hef";
@@ -25,7 +25,7 @@ const std::string FR_FUNC_NAME = "arcface_nv12";
 const std::string GALLERY_PATH  = "/home/pi/work/ai/exp/face_recognition_local_gallery_rgba.json";
 const std::string CR_SO_PATH    = POST_PROCESS_DIR + "/cropping_algorithms/libvms_croppers.so";
 const std::string CR_FUNC_NAME  = "face_recognition";
-const std::string FACE_ALIGN_SO_PATH = "/usr/lib/aarch64-linux-gnu/apps/vms/libvms_face_align.so";
+const std::string FACE_ALIGN_SO_PATH = "/usr/local/hailo/resources/so/libvms_face_align.so";
 const int VDEVICE_KEY = 1;
 
 int main(int argc, char** argv) {
@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
   GstElement* alHailofilter = GstFactory::getHailoFilter("al_hailofilter", FACE_ALIGN_SO_PATH, "face_align", FALSE); 
   // Recognition pipeline elements
   GstElement* rPreQ = GstFactory::getQueue("r_pre_q", 30);
-  GstElement* rHailonet = GstFactory::getHailoNet("r_hailonet", FR_HEF_PATH, 1, VDEVICE_KEY);
+  GstElement* rHailonet = GstFactory::getHailoNet("r_hailonet", FR_HEF_PATH, 1, VDEVICE_KEY + 1);
   GstElement* rPreAggQ = GstFactory::getQueue("recognition_pre_agg_q", 30, 0);
   GstElement* rPostAggQ = GstFactory::getQueue("recognition_post_agg_q", 30, 0);
   GstElement* rHailoFilter = GstFactory::getHailoFilter("face_recognition_hailofilter", FR_SO_PATH, FR_FUNC_NAME, FALSE);
@@ -139,9 +139,16 @@ int main(int argc, char** argv) {
   }
 
   std::vector<GstElement*> crBypassBranch = {crBypassQ, crAggegrator};
-  std::vector<GstElement*> crPipeline = {alPreQ,    alHailofilter, rPreQ,
-                                         rHailonet, rPreAggQ,      rHailoFilter,
-                                         rPostAggQ, crAggegrator};
+  std::vector<GstElement*> crPipeline = {
+    // alPreQ,
+    // alHailofilter,
+    rPreQ,
+    rHailonet,
+    rPreAggQ,
+    rHailoFilter,
+    rPostAggQ,
+    crAggegrator
+  };
   pe = PipelineElement();
   pe.element = crHailocropper;
   pe.branches.push_back(crBypassBranch);
