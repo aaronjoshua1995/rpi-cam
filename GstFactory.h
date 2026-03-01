@@ -45,8 +45,12 @@ public:
                                   int threads,
                                   bool addBorders,
                                   bool qos);
-  static GstElement* getHailoNet(const std::string& name, const std::string& hefPath, int schedulingAlgorithm, int vDeviceKey);
-  static GstElement* getHailoFilter(const std::string& name, const std::string& soPath, const std::string& funcName, bool qos);
+  // static GstElement* getHailoNet(const std::string& name, const std::string& hefPath, int schedulingAlgorithm, int vDeviceKey);
+  static GstElement* getHailoNet(const std::string& name, const std::string& hefPath,
+                          const std::string& vDeviceGroupId, int batchSize);
+  static GstElement* getHailoFilter(const std::string& name,
+                                    const std::string& soPath,
+                                    const std::string& funcName, bool qos);
   static GstElement* getHailoMuxer(const std::string& name);
   static GstElement* getHailoCropper(const std::string& name, const std::string& soPath, const std::string& funcName);
   static GstElement* getHailoAggregator(const std::string& name);

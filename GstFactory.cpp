@@ -229,9 +229,27 @@ GstElement* GstFactory::getVideoScale(const std::string& name,
   return videoscale;
 }
 
+// GstElement* GstFactory::getHailoNet(const std::string& name,
+//                                     const std::string& hefPath,
+//                                     int schedulingAlgorithm, int vDeviceKey) {
+//   GstElement* hailonet = gst_element_factory_make("hailonet", name.c_str());
+//   if (!hailonet) {
+//     g_printerr("Failed to create hailonet element\n");
+//     return nullptr;
+//   }
+//   g_object_set(hailonet,
+//                "hef-path", hefPath.c_str(),
+//                "scheduling-algorithm", schedulingAlgorithm,
+//                "vdevice-group-id", "SHARED",
+//                "force-writeable", TRUE,
+//                nullptr);
+//   return hailonet;
+// }
+
 GstElement* GstFactory::getHailoNet(const std::string& name,
                                     const std::string& hefPath,
-                                    int schedulingAlgorithm, int vDeviceKey) {
+                                    const std::string& vDeviceGroupId,
+                                    int batchSize) {
   GstElement* hailonet = gst_element_factory_make("hailonet", name.c_str());
   if (!hailonet) {
     g_printerr("Failed to create hailonet element\n");
@@ -239,8 +257,9 @@ GstElement* GstFactory::getHailoNet(const std::string& name,
   }
   g_object_set(hailonet,
                "hef-path", hefPath.c_str(),
-               "scheduling-algorithm", schedulingAlgorithm,
-               "vdevice-key", vDeviceKey,
+               "batch-size", batchSize,
+               "vdevice-group-id", vDeviceGroupId.c_str(),
+               "force-writeable", TRUE,
                nullptr);
   return hailonet;
 }
@@ -281,6 +300,8 @@ GstElement* GstFactory::getHailoCropper(const std::string& name,
   g_object_set(cropper,
               "so-path", soPath.c_str(),
               "function-name", funcName.c_str(),
+              "use-letterbox", TRUE,
+              "resize-method", "inter-area",
               "internal-offset", TRUE,
               nullptr);
   return cropper;

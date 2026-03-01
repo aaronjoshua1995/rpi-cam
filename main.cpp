@@ -32,7 +32,9 @@ int main(int argc, char** argv) {
   // Initialize GStreamer
   gst_init(&argc, &argv);
 
-  // Create pipeline elements
+  GstElement* fakeSink = GstFactory::getFakesink("fakeSink");
+
+  // Create source elements
   GstElement* src = GstFactory::getLibcameraSrc("src_0", 0);
   GstElement* srcCaps = GstFactory::getCaps("src_caps", "video/x-raw", "YUY2", CAPTURE_WIDTH, CAPTURE_HEIGHT, CAPTURE_FPS);
   GstElement* srcScaleQ = GstFactory::getQueue("src_scale_q");
@@ -42,50 +44,77 @@ int main(int argc, char** argv) {
   GstElement* srcConvertCaps = GstFactory::getCaps("src_convert_caps", "video/x-raw", "RGB", CAPTURE_WIDTH, CAPTURE_HEIGHT, -1, "1/1");
   GstElement* srcVideorate = GstFactory::getVideorate("src_videorate");
   GstElement* srcVideorateCaps = GstFactory::getCaps("src_videorate_caps", "video/x-raw", "", -1, -1, 30);
-  GstElement* fakeSink = GstFactory::getFakesink("fakeSink");
-
-  GstElement* gstElements[] = {
-    src,
-    srcCaps,
-    srcScaleQ,
-    srcScale,
-    srcConvertQ,
-    srcConvert,
-    srcConvertCaps,
-    srcVideorate,
-    srcVideorateCaps,
+  GstElement* srcElements[] = {
+      src,        srcCaps,        srcScaleQ,    srcScale,         srcConvertQ,
+      srcConvert, srcConvertCaps, srcVideorate, srcVideorateCaps,
   };
-  for (GstElement* elem : gstElements) {
-    if (!elem) {
-      g_printerr(
-          "GstFactory: failed to create one or more GstElements; cleaning up "
-          "and "
-          "exiting.\n");
-      for (GstElement* ce : gstElements) {
-        if (ce) gst_object_unref(ce);
-      }
-      return 1;
-    }
-  }
+  // Create detection elements
+  GstElement* detectScaleQ = GstFactory::getQueue("detect_scale_q");
+  GstElement* detectScale = GstFactory::getVideoScale("detect_scale", 1, 2, TRUE, FALSE);
+  GstElement* detectConvertQ = GstFactory::getQueue("detect_convert_q");
+  GstElement* detectConvert = GstFactory::getVideoconvert("detect_convert", 3, FALSE);
+  GstElement* detectConvertCaps = GstFactory::getCaps("detect_convert_caps", "video/x-raw", "", -1, -1, -1, "1/1");
+  GstElement* detectHailonetQ = GstFactory::getQueue("detect_hailonet_q");
+  GstElement* detectHailonet = GstFactory::getHailoNet("detect_hailonet", FD_HEF_PATH, "SHARED", 1);
+  GstElement* detectHailofilterQ = GstFactory::getQueue("detect_hailofilter_q");
+  GstElement* detectHailofilter = GstFactory::getHailoFilter("detect_hailofilter", FD_SO_PATH, FD_FUNC_NAME, FALSE);
+  GstElement* detectOutputQ = GstFactory::getQueue("detect_output_q");
+  // Create detection wrapper elements
+  GstElement* detectWrapInputQ = GstFactory::getQueue("detect_wrap_input_q");
+  GstElement* detectWrapHailocropper = GstFactory::getHailoCropper("detect_wrap_crop", CR_SO_PATH, CR_FUNC_NAME);
+  GstElement* detectWrapHailoagg = GstFactory::getHailoAggregator("detect_wrap_agg");
+  GstElement* detectWrapBypassQ = GstFactory::getQueue("detect_wrap_bypass_q", 0, 30);
+  GstElement* detectWrapOutputQ = GstFactory::getQueue("detect_wrap_output_q");
+  GstElement* detectWrapElements[] = {
+      detectScaleQ,       detectScale,        detectConvertQ,
+      detectConvert,      detectConvertCaps,  detectHailonetQ,
+      detectHailonet,     detectHailofilterQ, detectHailofilter,
+      detectOutputQ,      detectWrapInputQ,   detectWrapHailocropper,
+      detectWrapHailoagg, detectWrapBypassQ,  detectWrapOutputQ,
+  };
+  std::vector<GstElement*> detectWrapCropBranch1 = {detectWrapBypassQ,
+                                                    detectWrapHailoagg};
+  std::vector<GstElement*> detectWrapCropBranch2 = {
+      detectScaleQ,      detectScale,     detectConvertQ,    detectConvert,
+      detectConvertCaps, detectHailonetQ, detectHailonet,    detectHailofilterQ,
+      detectHailofilter, detectOutputQ,   detectWrapHailoagg};
+
+  // for (GstElement* elem : gstElements) {
+  //   if (!elem) {
+  //     g_printerr(
+  //         "GstFactory: failed to create one or more GstElements; cleaning up "
+  //         "and "
+  //         "exiting.\n");
+  //     for (GstElement* ce : gstElements) {
+  //       if (ce) gst_object_unref(ce);
+  //     }
+  //     return 1;
+  //   }
+  // }
 
   Pipeline pipeline = Pipeline();
+
   PipelineElement pe;
-  GstElement* srcPipeline[] = {
-    src,
-    srcCaps,
-    srcScaleQ,
-    srcScale,
-    srcConvertQ,
-    srcConvert,
-    srcConvertCaps,
-    srcVideorate,
-    srcVideorateCaps,
-  };
-  for (GstElement* elem : srcPipeline) {
+  for (GstElement* elem : srcElements) {
     pe = PipelineElement();
     pe.element = elem;
     pipeline.addElement(pe);
   }
+
+  pe = PipelineElement();
+  pe.element = detectWrapInputQ;
+  pipeline.addElement(pe);
+
+  pe = PipelineElement();
+  pe.element = detectWrapHailocropper;
+  pe.branches.push_back(detectWrapCropBranch1);
+  pe.branches.push_back(detectWrapCropBranch2);
+  pipeline.addElement(pe);
+
+  pe = PipelineElement();
+  pe.element = detectWrapOutputQ;
+  pipeline.addElement(pe);
+
   pe = PipelineElement();
   pe.element = fakeSink;
   pipeline.addElement(pe);
