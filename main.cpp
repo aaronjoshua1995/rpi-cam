@@ -109,68 +109,59 @@ int main(int argc, char** argv) {
   Pipeline pipeline = Pipeline();
   PipelineElement pe;
   std::vector<GstElement*> srcPipeline = {
-      source, caps, preFlipQ, videoflip, hailoPreConvertQ, videoconvert, dPreQ,
-  };
+      source,           caps,         preFlipQ, videoflip,
+      hailoPreConvertQ, videoconvert, dPreQ,    fakeSink};
   for (GstElement* elem : srcPipeline) {
     pe = PipelineElement();
     pe.element = elem;
     pipeline.addElement(pe);
   }
 
-  std::vector<GstElement*> dBypassBranch = {dBypassQ, dHailomuxer};
-  std::vector<GstElement*> dInferBranch = {
-      dVideoscale, dCaps,         dPreFdInferQ, fdHailonet,
-      fdPostQ,     fdHailofilter, dPostFilterQ, dHailomuxer};
-  pe = PipelineElement();
-  pe.element = dTee;
-  pe.branches.push_back(dBypassBranch);
-  pe.branches.push_back(dInferBranch);
-  pipeline.addElement(pe);
-
-  // TODO: Connect both branches to the muxer sink pads
+  // std::vector<GstElement*> dBypassBranch = {dBypassQ, dHailomuxer};
+  // std::vector<GstElement*> dInferBranch = {
+  //     dVideoscale, dCaps,         dPreFdInferQ, fdHailonet,
+  //     fdPostQ,     fdHailofilter, dPostFilterQ, dHailomuxer};
   // pe = PipelineElement();
-  // pe.element = dHailomuxer;
+  // pe.element = dTee;
+  // pe.branches.push_back(dBypassBranch);
+  // pe.branches.push_back(dInferBranch);
   // pipeline.addElement(pe);
 
-  std::vector<GstElement*> fTrackerPipeline = {frPreQ, frHailotracker, crPreQ};
-  for (GstElement* elem : fTrackerPipeline) {
-    PipelineElement pe = PipelineElement();
-    pe.element = elem;
-    pipeline.addElement(pe);
-  }
+  // std::vector<GstElement*> fTrackerPipeline = {frPreQ, frHailotracker, crPreQ};
+  // for (GstElement* elem : fTrackerPipeline) {
+  //   PipelineElement pe = PipelineElement();
+  //   pe.element = elem;
+  //   pipeline.addElement(pe);
+  // }
 
-  std::vector<GstElement*> crBypassBranch = {crBypassQ, crAggegrator};
-  std::vector<GstElement*> crPipeline = {
-    // alPreQ,
-    // alHailofilter,
-    rPreQ,
-    rHailonet,
-    rPreAggQ,
-    rHailoFilter,
-    rPostAggQ,
-    crAggegrator
-  };
-  pe = PipelineElement();
-  pe.element = crHailocropper;
-  pe.branches.push_back(crBypassBranch);
-  pe.branches.push_back(crPipeline);
-  pipeline.addElement(pe);
-  std::vector<GstElement*> sinkPipeline = {gaPreQ,         fakeSink};
+  // std::vector<GstElement*> crBypassBranch = {crBypassQ, crAggegrator};
+  // std::vector<GstElement*> crPipeline = {
+  //   // alPreQ,
+  //   // alHailofilter,
+  //   rPreQ,
+  //   rHailonet,
+  //   rPreAggQ,
+  //   rHailoFilter,
+  //   rPostAggQ,
+  //   crAggegrator
+  // };
+  // pe = PipelineElement();
+  // pe.element = crHailocropper;
+  // pe.branches.push_back(crBypassBranch);
+  // pe.branches.push_back(crPipeline);
+  // pipeline.addElement(pe);
+  // std::vector<GstElement*> sinkPipeline = {gaPreQ,         fakeSink};
 
   // std::vector<GstElement*> sinkPipeline = {gaPreQ,         gaHailoGallery,
   //                                          drPreQ,         drHailoOverlay,
   //                                          drPreIdentityQ, drIdentity,
   //                                          drPostQ,        sinkConvert,
   //                                          sinkQ,          sink};
-  for (GstElement* elem : sinkPipeline) {
-    PipelineElement pe = PipelineElement();
-    pe.element = elem;
-    pipeline.addElement(pe);
-  }
-  // TODO: Connect both branches to the aggegrator sink pads
-  // pe = PipelineElement();
-  // pe.element = crAggegrator;
-  // pipeline.addElement(pe);
+  // for (GstElement* elem : sinkPipeline) {
+  //   PipelineElement pe = PipelineElement();
+  //   pe.element = elem;
+  //   pipeline.addElement(pe);
+  // }
 
   GstElement* p = pipeline.construct();
   if (!p) {
