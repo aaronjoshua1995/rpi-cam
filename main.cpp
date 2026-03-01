@@ -132,7 +132,7 @@ int main(int argc, char** argv) {
   GstElement* displayQ = GstFactory::getQueue("display_sink_q");
   GstElement* displaySink = GstFactory::getFpsDisplaySink("display_sink", "autovideosink", FALSE, FALSE);
   GstElement* displayElements[] = {
-      displayOverlayQ, displayOverlay, displayConvertQ, displayConvert, displayQ, fakeSink,
+      displayOverlayQ, displayOverlay, displayConvertQ, displayConvert, displayQ, displaySink,
   };
 
   // for (GstElement* elem : gstElements) {
