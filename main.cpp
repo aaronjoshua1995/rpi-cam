@@ -124,7 +124,6 @@ int main(int argc, char** argv) {
   GstElement* identityQueue = GstFactory::getQueue("identity_cb_q");
   GstElement* identityCallback = GstFactory::getIdentity("identity_cb");
   GstPad* identitySrcPad = gst_element_get_static_pad(identityCallback, "src");
-  // gst_pad_add_probe(identitySrcPad, GstPadProbeType::GST_PAD_PROBE_TYPE_BUFFER, vectorDBCallback, nullptr, nullptr);
   // Display pipeline
   GstElement* displayOverlayQ = GstFactory::getQueue("display_overlay_q");
   GstElement* displayOverlay = GstFactory::getHailoOverlay("display_overlay", 5, 2, 8, FALSE, TRUE, TRUE);
@@ -212,6 +211,8 @@ int main(int argc, char** argv) {
     g_printerr("Failed to construct pipeline\n");
     return 1;
   }
+
+  gst_pad_add_probe(identitySrcPad, GstPadProbeType::GST_PAD_PROBE_TYPE_BUFFER, vectorDBCallback, nullptr, nullptr);
 
   GMainLoop* loop = g_main_loop_new(nullptr, FALSE);
   if (!loop) {
