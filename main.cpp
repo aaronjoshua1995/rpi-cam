@@ -155,12 +155,13 @@ int main(int argc, char** argv) {
   pe.branches.push_back(crBypassBranch);
   pe.branches.push_back(crPipeline);
   pipeline.addElement(pe);
+  std::vector<GstElement*> sinkPipeline = {gaPreQ,         fakeSink};
 
-  std::vector<GstElement*> sinkPipeline = {gaPreQ,         gaHailoGallery,
-                                           drPreQ,         drHailoOverlay,
-                                           drPreIdentityQ, drIdentity,
-                                           drPostQ,        sinkConvert,
-                                           sinkQ,          sink};
+  // std::vector<GstElement*> sinkPipeline = {gaPreQ,         gaHailoGallery,
+  //                                          drPreQ,         drHailoOverlay,
+  //                                          drPreIdentityQ, drIdentity,
+  //                                          drPostQ,        sinkConvert,
+  //                                          sinkQ,          sink};
   for (GstElement* elem : sinkPipeline) {
     PipelineElement pe = PipelineElement();
     pe.element = elem;
