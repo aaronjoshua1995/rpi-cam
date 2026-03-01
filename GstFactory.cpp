@@ -198,6 +198,7 @@ GstElement* GstFactory::getFpsDisplaySink(const std::string& name,
               "video-sink", videoSink.c_str(),
               "sync", sync,
               "text-overlay", textOverlay,
+              "signal-fps-measurements", TRUE,
               nullptr);
   return fpsSink;
 }
