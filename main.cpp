@@ -110,22 +110,27 @@ int main(int argc, char** argv) {
   PipelineElement pe;
   std::vector<GstElement*> srcPipeline = {
       source,           caps,         preFlipQ, videoflip,
-      hailoPreConvertQ, videoconvert, dPreQ,    fakeSink};
+      hailoPreConvertQ, videoconvert, dPreQ};
   for (GstElement* elem : srcPipeline) {
     pe = PipelineElement();
     pe.element = elem;
     pipeline.addElement(pe);
   }
 
-  // std::vector<GstElement*> dBypassBranch = {dBypassQ, dHailomuxer};
-  // std::vector<GstElement*> dInferBranch = {
-  //     dVideoscale, dCaps,         dPreFdInferQ, fdHailonet,
-  //     fdPostQ,     fdHailofilter, dPostFilterQ, dHailomuxer};
-  // pe = PipelineElement();
-  // pe.element = dTee;
-  // pe.branches.push_back(dBypassBranch);
-  // pe.branches.push_back(dInferBranch);
-  // pipeline.addElement(pe);
+  std::vector<GstElement*> dBypassBranch = {dBypassQ, dHailomuxer};
+  std::vector<GstElement*> dInferBranch = {
+      dVideoscale, dCaps,         dPreFdInferQ, fdHailonet,
+      fdPostQ,     fdHailofilter, dPostFilterQ, dHailomuxer};
+  pe = PipelineElement();
+  pe.element = dTee;
+  pe.branches.push_back(dBypassBranch);
+  pe.branches.push_back(dInferBranch);
+  pipeline.addElement(pe);
+
+  pe = PipelineElement();
+  pe.element = fakeSink;
+  pipeline.addElement(pe);
+
 
   // std::vector<GstElement*> fTrackerPipeline = {frPreQ, frHailotracker, crPreQ};
   // for (GstElement* elem : fTrackerPipeline) {
