@@ -78,7 +78,34 @@ int main(int argc, char** argv) {
       detectScaleQ,      detectScale,     detectConvertQ,    detectConvert,
       detectConvertCaps, detectHailonetQ, detectHailonet,    detectHailofilterQ,
       detectHailofilter, detectOutputQ,   detectWrapHailoagg};
-
+  // Create tracker elements
+  GstElement* hailoTracker = GstFactory::getHailoTracker("hailo_face_tracker");
+  // Create face align elements
+  GstElement* alignHailofilter = GstFactory::getHailoFilter("face_align_hailofilter", FACE_ALIGN_SO_PATH, "", FALSE, TRUE);
+  GstElement* alignOutputQ = GstFactory::getQueue("face_align_q");
+  // Create face recognition elements
+  GstElement* recogScaleQ = GstFactory::getQueue("recog_scale_q");
+  GstElement* recogScale = GstFactory::getVideoScale("recog_scale", 1, 2, TRUE, FALSE);
+  GstElement* recogConvertQ = GstFactory::getQueue("recog_convert_q");
+  GstElement* recogConvert = GstFactory::getVideoconvert("recog_convert", 3, FALSE);
+  GstElement* recogConvertCaps = GstFactory::getCaps("recog_convert_caps", "video/x-raw", "", -1, -1, -1, "1/1");
+  GstElement* recogHailonetQ = GstFactory::getQueue("recog_hailonet_q");
+  GstElement* recogHailonet = GstFactory::getHailoNet("recog_hailonet", FR_HEF_PATH, "SHARED", 1);
+  GstElement* recogHailofilterQ = GstFactory::getQueue("recog_hailofilter_q");
+  GstElement* recogHailofilter = GstFactory::getHailoFilter("recog_hailofilter", FR_SO_PATH, FR_FUNC_NAME, FALSE);
+  GstElement* recogOutputQ = GstFactory::getQueue("recog_output_q");
+  // Create cropper elements
+  GstElement* recogWrapInputQ = GstFactory::getQueue("recog_wrap_input_q");
+  GstElement* recogWrapHailocropper = GstFactory::getHailoCropper("recog_wrap_hailocropper", CR_SO_PATH, CR_FUNC_NAME);
+  GstElement* recogWrapHailoagg = GstFactory::getHailoAggregator("recog_wrap_agg");
+  GstElement* recogWrapBypassQ = GstFactory::getQueue("recog_wrap_bypass_q", 0, 20);
+  GstElement* recogWrapOutputQ = GstFactory::getQueue("recog_wrap_output_q");
+  std::vector<GstElement*> recogWrapCropBranch1 = {recogWrapBypassQ, recogWrapHailoagg};
+  std::vector<GstElement*> recogWrapCropBranch2 = {
+      recogScaleQ,      recogScale,     recogConvertQ,    recogConvert,
+      recogConvertCaps, recogHailonetQ, recogHailonet,    recogHailofilterQ,
+      recogHailofilter, recogOutputQ,   recogWrapHailoagg};
+  
   // for (GstElement* elem : gstElements) {
   //   if (!elem) {
   //     g_printerr(
@@ -101,6 +128,7 @@ int main(int argc, char** argv) {
     pipeline.addElement(pe);
   }
 
+  // Detection
   pe = PipelineElement();
   pe.element = detectWrapInputQ;
   pipeline.addElement(pe);
@@ -113,6 +141,21 @@ int main(int argc, char** argv) {
 
   pe = PipelineElement();
   pe.element = detectWrapOutputQ;
+  pipeline.addElement(pe);
+
+  // Recognition
+  pe = PipelineElement();
+  pe.element = recogWrapInputQ;
+  pipeline.addElement(pe);
+
+  pe = PipelineElement();
+  pe.element = recogWrapHailocropper;
+  pe.branches.push_back(recogWrapCropBranch1);
+  pe.branches.push_back(recogWrapCropBranch2);
+  pipeline.addElement(pe);
+
+  pe = PipelineElement();
+  pe.element = recogWrapOutputQ;
   pipeline.addElement(pe);
 
   pe = PipelineElement();

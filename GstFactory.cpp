@@ -266,15 +266,19 @@ GstElement* GstFactory::getHailoNet(const std::string& name,
 
 GstElement* GstFactory::getHailoFilter(const std::string& name,
                                        const std::string& soPath,
-                                       const std::string& funcName, bool qos) {
+                                       const std::string& funcName, bool qos, bool useGstBuffer) {
   GstElement* hailofilter = gst_element_factory_make("hailofilter", name.c_str());
   if (!hailofilter) {
     g_printerr("Failed to create hailofilter element\n");
     return nullptr;
   }
+
+  if (!funcName.empty()) {
+    g_object_set(hailofilter, "function-name", funcName.c_str(), nullptr);
+  }
   g_object_set(hailofilter,
                "so-path", soPath.c_str(),
-               "function-name", funcName.c_str(),
+               "use-gst-buffers", useGstBuffer, 
                "qos", qos,
                nullptr);
   return hailofilter;
