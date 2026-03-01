@@ -82,6 +82,12 @@ GstElement* GstFactory::getVideoconvert(const std::string& name, const int nThre
   return elem;
 }
 
+GstElement* GstFactory::getVideorate(const std::string& name) {
+  GstElement* elem = gst_element_factory_make("videorate", name.c_str());
+  if (!elem) g_printerr("GstFactory: failed to create element 'videorate' with name '%s'\n", name.c_str());
+  return elem;
+}
+
 GstElement* GstFactory::getV4l2convert(const std::string& name) {
   GstElement* elem = gst_element_factory_make("videoconvert", name.c_str());
   if (!elem) g_printerr("GstFactory: failed to create element 'v4l2convert' with name '%s'\n", name.c_str());

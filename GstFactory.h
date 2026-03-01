@@ -16,6 +16,7 @@ public:
                              const std::string& pixelAspectRatio = "", 
                              const std::string& level = "");
   static GstElement* getVideoconvert(const std::string& name, const int nThreads = 0, bool qos = false);
+  static GstElement* getVideorate(const std::string& name);
   static GstElement* getV4l2convert(const std::string& name);
   static GstElement* getV4l2h264Enc(const std::string& name, const int bitrate);
   static GstElement* getH264Parse(const std::string& name);

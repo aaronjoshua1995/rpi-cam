@@ -7,8 +7,8 @@
 #include "GstFactory.h"
 
 const int CAPTURE_FPS = 30;
-const int CAPTURE_WIDTH = 800;
-const int CAPTURE_HEIGHT = 600;
+const int CAPTURE_WIDTH = 640;
+const int CAPTURE_HEIGHT = 640;
 
 // Base directories
 const std::string MODEL_DIR        = "/home/pi/rpi-cam/models";
@@ -33,66 +33,28 @@ int main(int argc, char** argv) {
   gst_init(&argc, &argv);
 
   // Create pipeline elements
-  GstElement* source = GstFactory::getLibcameraSrc("src_0", 0);
-  GstElement* caps = GstFactory::getCaps("src_caps", "video/x-raw", "YUY2", CAPTURE_WIDTH, CAPTURE_HEIGHT, CAPTURE_FPS);
-  GstElement* preFlipQ = GstFactory::getQueue("pre_flip_q", 30);
-  GstElement* videoflip = GstFactory::getVideoFlip("videoflip", GST_VIDEO_ORIENTATION_HORIZ);
-  GstElement* hailoPreConvertQ = GstFactory::getQueue("hailo_pre_convert_q", 30);
-  GstElement *videoconvert = GstFactory::getVideoconvert("videoconvert", 2, FALSE);
-  // Face detection pipeline elements
-  GstElement* fdHailonet = GstFactory::getHailoNet("fd_hailonet", FD_HEF_PATH, 1, VDEVICE_KEY);
-  GstElement* fdPostQ = GstFactory::getQueue("fd_post_q", 30);
-  GstElement* fdHailofilter = GstFactory::getHailoFilter("fd_hailofilter", FD_SO_PATH, FD_FUNC_NAME, FALSE);
-  // Detector pipeline elements
-  GstElement* dPreQ = GstFactory::getQueue("d_pre_q", 30);
-  GstElement* dTee = GstFactory::getTee("t");
-  GstElement* dHailomuxer = GstFactory::getHailoMuxer("hmux");
-  GstElement* dBypassQ = GstFactory::getQueue("d_bypass_q", 30, 0);
-  GstElement* dVideoscale = GstFactory::getVideoScale("d_face_videoscale", 0, 2, FALSE, FALSE);
-  GstElement* dCaps = GstFactory::getCaps("d_caps", "video/x-raw", "", -1, -1, -1, "1/1");
-  GstElement* dPreFdInferQ = GstFactory::getQueue("d_pre_fd_infer_q", 30, 0);
-  GstElement* dPostFilterQ = GstFactory::getQueue("d_post_filter_q", 30, 0);
-  // Face tracker pipeline elements
-  GstElement* frPreQ = GstFactory::getQueue("fr_pre_q", 30);
-  GstElement* frHailotracker = GstFactory::getHailoTracker("fr_hailotracker");
-  // Cropper pipeline elements
-  GstElement* crPreQ = GstFactory::getQueue("cr_pre_q", 30);
-  GstElement* crHailocropper = GstFactory::getHailoCropper("fr_cropper", CR_SO_PATH, CR_FUNC_NAME);
-  GstElement* crPrecrAggegrator = GstFactory::getQueue("cr_pre_agg_q", 30, 0);
-  GstElement* crAggegrator = GstFactory::getHailoAggregator("fr_agg");
-  GstElement* crPostcrAggegrator = GstFactory::getQueue("cr_post_agg_q", 30, 0);
-  GstElement* crBypassQ = GstFactory::getQueue("cr_bypass_q", 30, 0);
-  // Align pipeline elements
-  GstElement* alPreQ = GstFactory::getQueue("al_pre_q", 30);
-  GstElement* alHailofilter = GstFactory::getHailoFilter("al_hailofilter", FACE_ALIGN_SO_PATH, "face_align", FALSE); 
-  // Recognition pipeline elements
-  GstElement* rPreQ = GstFactory::getQueue("r_pre_q", 30);
-  GstElement* rHailonet = GstFactory::getHailoNet("r_hailonet", FR_HEF_PATH, 1, VDEVICE_KEY);
-  GstElement* rPreAggQ = GstFactory::getQueue("recognition_pre_agg_q", 30, 0);
-  GstElement* rPostAggQ = GstFactory::getQueue("recognition_post_agg_q", 30, 0);
-  GstElement* rHailoFilter = GstFactory::getHailoFilter("face_recognition_hailofilter", FR_SO_PATH, FR_FUNC_NAME, FALSE);
-  // Gallery pipeline
-  GstElement* gaPreQ = GstFactory::getQueue("ga_pre_q", 30);
-  GstElement* gaHailoGallery = GstFactory::getHailoGallery("gallery", GALLERY_PATH, 0.4, 20, 1, TRUE);
-  // Drawing pipeline
-  GstElement* drPreQ = GstFactory::getQueue("dr_pre_q", 30);
-  GstElement* drHailoOverlay = GstFactory::getHailoOverlay("hailo_overlay", 5, 2, 8, FALSE, TRUE, TRUE);
-  GstElement* drPreIdentityQ = GstFactory::getQueue("dr_pre_identity_q", 30);
-  GstElement* drIdentity = GstFactory::getIdentity("identity_callback");
-  GstElement* drPostQ = GstFactory::getQueue("dr_post_q", 30);
-  // Sink pipeline
-  GstElement* sinkConvert = GstFactory::getVideoconvert("display_videoconvert", 4, FALSE);
-  GstElement* sinkQ = GstFactory::getQueue("sink_q", 30, 0);
-  GstElement* sink = GstFactory::getFpsDisplaySink("videosink", "xvimagesink", FALSE, FALSE);
+  GstElement* src = GstFactory::getLibcameraSrc("src_0", 0);
+  GstElement* srcCaps = GstFactory::getCaps("src_caps", "video/x-raw", "YUY2", CAPTURE_WIDTH, CAPTURE_HEIGHT, CAPTURE_FPS);
+  GstElement* srcScaleQ = GstFactory::getQueue("src_scale_q");
+  GstElement* srcScale = GstFactory::getVideoScale("src_scale", 1, 2, TRUE, TRUE);
+  GstElement* srcConvertQ = GstFactory::getQueue("src_convert_q");
+  GstElement* srcConvert = GstFactory::getVideoconvert("src_convert", 3, FALSE);
+  GstElement* srcConvertCaps = GstFactory::getCaps("src_convert_caps", "video/x-raw", "RGB", CAPTURE_WIDTH, CAPTURE_HEIGHT, -1, "1/1");
+  GstElement* srcVideorate = GstFactory::getVideorate("src_videorate");
+  GstElement* srcVideorateCaps = GstFactory::getCaps("src_videorate_caps", "video/x-raw", "", -1, -1, 30);
   GstElement* fakeSink = GstFactory::getFakesink("fakeSink");
 
   GstElement* gstElements[] = {
-      source,       caps,         preFlipQ,       videoflip,
-      fdHailonet,   fdPostQ,      fdHailofilter,  dTee,
-      dHailomuxer,  dBypassQ,     dVideoscale,    dCaps,
-      dPreFdInferQ, dPostFilterQ, frHailotracker, crHailocropper,
-      crAggegrator, crBypassQ,    alHailofilter,  rHailonet,
-      rPreAggQ,     rHailoFilter, rPostAggQ,      rPreQ};
+    src,
+    srcCaps,
+    srcScaleQ,
+    srcScale,
+    srcConvertQ,
+    srcConvert,
+    srcConvertCaps,
+    srcVideorate,
+    srcVideorateCaps,
+  };
   for (GstElement* elem : gstElements) {
     if (!elem) {
       g_printerr(
@@ -108,60 +70,25 @@ int main(int argc, char** argv) {
 
   Pipeline pipeline = Pipeline();
   PipelineElement pe;
-  std::vector<GstElement*> srcPipeline = {
-      source,           caps,         preFlipQ, videoflip,
-      hailoPreConvertQ, videoconvert, dPreQ};
+  GstElement* srcPipeline[] = {
+    src,
+    srcCaps,
+    srcScaleQ,
+    srcScale,
+    srcConvertQ,
+    srcConvert,
+    srcConvertCaps,
+    srcVideorate,
+    srcVideorateCaps,
+  };
   for (GstElement* elem : srcPipeline) {
     pe = PipelineElement();
     pe.element = elem;
     pipeline.addElement(pe);
   }
-
-  std::vector<GstElement*> dBypassBranch = {dBypassQ, dHailomuxer};
-  std::vector<GstElement*> dInferBranch = {
-      dVideoscale, dCaps,         dPreFdInferQ, fdHailonet,
-      fdPostQ,     fdHailofilter, dPostFilterQ, dHailomuxer};
   pe = PipelineElement();
-  pe.element = dTee;
-  pe.branches.push_back(dBypassBranch);
-  pe.branches.push_back(dInferBranch);
+  pe.element = fakeSink;
   pipeline.addElement(pe);
-
-  std::vector<GstElement*> fTrackerPipeline = {frPreQ, frHailotracker, crPreQ};
-  for (GstElement* elem : fTrackerPipeline) {
-    PipelineElement pe = PipelineElement();
-    pe.element = elem;
-    pipeline.addElement(pe);
-  }
-
-  std::vector<GstElement*> crBypassBranch = {crBypassQ, crAggegrator};
-  std::vector<GstElement*> crPipeline = {
-    // alPreQ,
-    // alHailofilter,
-    rPreQ,
-    rHailonet,
-    rPreAggQ,
-    rHailoFilter,
-    rPostAggQ,
-    crAggegrator
-  };
-  pe = PipelineElement();
-  pe.element = crHailocropper;
-  pe.branches.push_back(crBypassBranch);
-  pe.branches.push_back(crPipeline);
-  pipeline.addElement(pe);
-  std::vector<GstElement*> sinkPipeline = {gaPreQ,         fakeSink};
-
-  // std::vector<GstElement*> sinkPipeline = {gaPreQ,         gaHailoGallery,
-  //                                          drPreQ,         drHailoOverlay,
-  //                                          drPreIdentityQ, drIdentity,
-  //                                          drPostQ,        sinkConvert,
-  //                                          sinkQ,          sink};
-  for (GstElement* elem : sinkPipeline) {
-    PipelineElement pe = PipelineElement();
-    pe.element = elem;
-    pipeline.addElement(pe);
-  }
 
   GstElement* p = pipeline.construct();
   if (!p) {
