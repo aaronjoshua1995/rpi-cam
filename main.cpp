@@ -211,17 +211,21 @@ int main(int argc, char** argv) {
   gst_caps_unref(caps);
   GstElement* encode = gst_element_factory_make("openh264enc", "encoder");
   GstElement* parse  = gst_element_factory_make("h264parse", "parse");
-  GstElement* pay = gst_element_factory_make("mpegtsmux", "mux");
+  GstElement* mux = gst_element_factory_make("mpegtsmux", "mux");
   GstElement* sink = gst_element_factory_make("udpsink", "udp_sink");
 
   g_object_set(encode,
              "bitrate", 4000,        // kbps
              NULL);
 
-g_object_set(sink,
-             "host", "192.168.1.70",  // destination IP
-             "port", 5000,
+  g_object_set(parse,
+             "config-interval", 1,        
              NULL);
+
+  g_object_set(sink,
+              "host", "192.168.1.70",  // destination IP
+              "port", 5000,
+              NULL);
 
   pe = PipelineElement();
   pe.element = capsfilter;
@@ -233,7 +237,7 @@ g_object_set(sink,
   pe.element = encode;
   pipeline.addElement(pe);
   pe = PipelineElement();
-  pe.element = pay;
+  pe.element = mux;
   pipeline.addElement(pe);
   pe = PipelineElement();
   pe.element = sink;
