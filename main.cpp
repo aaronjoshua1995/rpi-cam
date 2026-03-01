@@ -202,13 +202,7 @@ int main(int argc, char** argv) {
     pipeline.addElement(pe);
   }
 
-  GstElement* capsfilter = gst_element_factory_make("capsfilter", "encoder_caps");
-  GstCaps* caps = gst_caps_new_simple(
-      "video/x-raw",
-      "format", G_TYPE_STRING, "I420",
-      NULL);
-  g_object_set(capsfilter, "caps", caps, NULL);
-  gst_caps_unref(caps);
+  GstElement* capsfilter = GstFactory::getCaps("enc_caps", "video/x-raw", "I420", CAPTURE_WIDTH, CAPTURE_HEIGHT, CAPTURE_FPS);
   GstElement* encode = gst_element_factory_make("openh264enc", "encoder");
   GstElement* parse  = gst_element_factory_make("h264parse", "parse");
   GstElement* mux = gst_element_factory_make("mpegtsmux", "mux");
