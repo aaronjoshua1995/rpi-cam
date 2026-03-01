@@ -134,38 +134,34 @@ int main(int argc, char** argv) {
     pipeline.addElement(pe);
   }
 
+  std::vector<GstElement*> crBypassBranch = {crBypassQ, crAggegrator};
+  std::vector<GstElement*> crPipeline = {
+    // alPreQ,
+    // alHailofilter,
+    rPreQ,
+    rHailonet,
+    rPreAggQ,
+    rHailoFilter,
+    rPostAggQ,
+    crAggegrator
+  };
   pe = PipelineElement();
-  pe.element = fakeSink;
+  pe.element = crHailocropper;
+  pe.branches.push_back(crBypassBranch);
+  pe.branches.push_back(crPipeline);
   pipeline.addElement(pe);
-
-  // std::vector<GstElement*> crBypassBranch = {crBypassQ, crAggegrator};
-  // std::vector<GstElement*> crPipeline = {
-  //   // alPreQ,
-  //   // alHailofilter,
-  //   rPreQ,
-  //   rHailonet,
-  //   rPreAggQ,
-  //   rHailoFilter,
-  //   rPostAggQ,
-  //   crAggegrator
-  // };
-  // pe = PipelineElement();
-  // pe.element = crHailocropper;
-  // pe.branches.push_back(crBypassBranch);
-  // pe.branches.push_back(crPipeline);
-  // pipeline.addElement(pe);
-  // std::vector<GstElement*> sinkPipeline = {gaPreQ,         fakeSink};
+  std::vector<GstElement*> sinkPipeline = {gaPreQ,         fakeSink};
 
   // std::vector<GstElement*> sinkPipeline = {gaPreQ,         gaHailoGallery,
   //                                          drPreQ,         drHailoOverlay,
   //                                          drPreIdentityQ, drIdentity,
   //                                          drPostQ,        sinkConvert,
   //                                          sinkQ,          sink};
-  // for (GstElement* elem : sinkPipeline) {
-  //   PipelineElement pe = PipelineElement();
-  //   pe.element = elem;
-  //   pipeline.addElement(pe);
-  // }
+  for (GstElement* elem : sinkPipeline) {
+    PipelineElement pe = PipelineElement();
+    pe.element = elem;
+    pipeline.addElement(pe);
+  }
 
   GstElement* p = pipeline.construct();
   if (!p) {
