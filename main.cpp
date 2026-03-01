@@ -196,11 +196,11 @@ int main(int argc, char** argv) {
   pipeline.addElement(pe);
  
   // Display elements
-  // for (int i = 0; i < 5; ++i) {
-  //   pe = PipelineElement();
-  //   pe.element = displayElements[i];
-  //   pipeline.addElement(pe);
-  // }
+  for (int i = 0; i < 5; ++i) {
+    pe = PipelineElement();
+    pe.element = displayElements[i];
+    pipeline.addElement(pe);
+  }
 
   GstElement* encode = gst_element_factory_make("x264", "encoder");
   GstElement* pay = gst_element_factory_make("rtph264pay", "payloader");
