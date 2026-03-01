@@ -124,13 +124,13 @@ int main(int argc, char** argv) {
   GstElement* identityQueue = GstFactory::getQueue("identity_cb_q");
   GstElement* identityCallback = GstFactory::getIdentity("identity_cb");
   GstPad* identitySrcPad = gst_element_get_static_pad(identityCallback, "src");
-  gst_pad_add_probe(identitySrcPad, GstPadProbeType::GST_PAD_PROBE_TYPE_BUFFER, vectorDBCallback, nullptr, nullptr);
+  // gst_pad_add_probe(identitySrcPad, GstPadProbeType::GST_PAD_PROBE_TYPE_BUFFER, vectorDBCallback, nullptr, nullptr);
   // Display pipeline
   GstElement* displayOverlayQ = GstFactory::getQueue("display_overlay_q");
   GstElement* displayOverlay = GstFactory::getHailoOverlay("display_overlay", 5, 2, 8, FALSE, TRUE, TRUE);
   GstElement* sinkConvertQ = GstFactory::getQueue("display_overlay_q");
   GstElement* sinkConvert = GstFactory::getVideoconvert("display_videoconvert", 4, FALSE);
-  GstElement* sinkQ = GstFactory::getQueue("display_sink_q", 30, 0);
+  GstElement* sinkQ = GstFactory::getQueue("display_sink_q");
   GstElement* sink = GstFactory::getFpsDisplaySink("display_sink", "autovideosink", FALSE, FALSE);
   GstElement* displayElements[] = {
       displayOverlayQ, displayOverlay, sinkConvertQ, sinkConvert, sinkQ, sink,
@@ -196,11 +196,11 @@ int main(int argc, char** argv) {
   pe.element = identityCallback;
   pipeline.addElement(pe);
  
-  for (int i = 0; i < 5; ++i) {
-    pe = PipelineElement();
-    pe.element = displayElements[i];
-    pipeline.addElement(pe);
-  }
+  // for (int i = 0; i < 5; ++i) {
+  //   pe = PipelineElement();
+  //   pe.element = displayElements[i];
+  //   pipeline.addElement(pe);
+  // }
 
   // Display elements
   pe = PipelineElement();
