@@ -128,12 +128,12 @@ int main(int argc, char** argv) {
   // Display pipeline
   GstElement* displayOverlayQ = GstFactory::getQueue("display_overlay_q");
   GstElement* displayOverlay = GstFactory::getHailoOverlay("display_overlay", 5, 2, 8, FALSE, TRUE, TRUE);
-  GstElement* sinkConvertQ = GstFactory::getQueue("display_overlay_q");
-  GstElement* sinkConvert = GstFactory::getVideoconvert("display_videoconvert", 4, FALSE);
-  GstElement* sinkQ = GstFactory::getQueue("display_sink_q");
-  GstElement* sink = GstFactory::getFpsDisplaySink("display_sink", "autovideosink", FALSE, FALSE);
+  GstElement* displayConvertQ = GstFactory::getQueue("display_convert_q");
+  GstElement* displayConvert = GstFactory::getVideoconvert("display_convert", 4, FALSE);
+  GstElement* displayQ = GstFactory::getQueue("display_sink_q");
+  GstElement* displaySink = GstFactory::getFpsDisplaySink("display_sink", "autovideosink", FALSE, FALSE);
   GstElement* displayElements[] = {
-      displayOverlayQ, displayOverlay, sinkConvertQ, sinkConvert, sinkQ, fakeSink,
+      displayOverlayQ, displayOverlay, displayConvertQ, displayConvert, displayQ, fakeSink,
   };
 
   // for (GstElement* elem : gstElements) {
