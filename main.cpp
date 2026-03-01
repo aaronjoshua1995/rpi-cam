@@ -202,7 +202,7 @@ int main(int argc, char** argv) {
     pipeline.addElement(pe);
   }
 
-  GstElement* encode = gst_element_factory_make("x264", "encoder");
+  GstElement* encode = gst_element_factory_make("openh264enc", "encoder");
   GstElement* pay = gst_element_factory_make("rtph264pay", "payloader");
   GstElement* sink = gst_element_factory_make("udpsink", "udp_sink");
 
