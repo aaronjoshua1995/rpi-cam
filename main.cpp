@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
   GstElement* alHailofilter = GstFactory::getHailoFilter("al_hailofilter", FACE_ALIGN_SO_PATH, "face_align", FALSE); 
   // Recognition pipeline elements
   GstElement* rPreQ = GstFactory::getQueue("r_pre_q", 30);
-  GstElement* rHailonet = GstFactory::getHailoNet("r_hailonet", FR_HEF_PATH, 1, VDEVICE_KEY + 1);
+  GstElement* rHailonet = GstFactory::getHailoNet("r_hailonet", FR_HEF_PATH, 1, VDEVICE_KEY);
   GstElement* rPreAggQ = GstFactory::getQueue("recognition_pre_agg_q", 30, 0);
   GstElement* rPostAggQ = GstFactory::getQueue("recognition_post_agg_q", 30, 0);
   GstElement* rHailoFilter = GstFactory::getHailoFilter("face_recognition_hailofilter", FR_SO_PATH, FR_FUNC_NAME, FALSE);
