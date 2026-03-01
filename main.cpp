@@ -39,6 +39,7 @@ static GstPadProbeReturn vectorDBCallback(GstPad* pad, GstPadProbeInfo* info,
               GST_TIME_ARGS(GST_BUFFER_PTS(buffer)));
     }
   }
+  g_print("PROBE CALLED");
 
   return GST_PAD_PROBE_OK;
 }
