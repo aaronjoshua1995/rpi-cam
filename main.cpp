@@ -127,17 +127,16 @@ int main(int argc, char** argv) {
   pe.branches.push_back(dInferBranch);
   pipeline.addElement(pe);
 
+  std::vector<GstElement*> fTrackerPipeline = {frPreQ, frHailotracker, crPreQ};
+  for (GstElement* elem : fTrackerPipeline) {
+    PipelineElement pe = PipelineElement();
+    pe.element = elem;
+    pipeline.addElement(pe);
+  }
+
   pe = PipelineElement();
   pe.element = fakeSink;
   pipeline.addElement(pe);
-
-
-  // std::vector<GstElement*> fTrackerPipeline = {frPreQ, frHailotracker, crPreQ};
-  // for (GstElement* elem : fTrackerPipeline) {
-  //   PipelineElement pe = PipelineElement();
-  //   pe.element = elem;
-  //   pipeline.addElement(pe);
-  // }
 
   // std::vector<GstElement*> crBypassBranch = {crBypassQ, crAggegrator};
   // std::vector<GstElement*> crPipeline = {
