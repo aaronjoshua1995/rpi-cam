@@ -195,16 +195,45 @@ int main(int argc, char** argv) {
   pe.element = identityCallback;
   pipeline.addElement(pe);
  
-  for (int i = 0; i < 5; ++i) {
-    pe = PipelineElement();
-    pe.element = displayElements[i];
-    pipeline.addElement(pe);
-  }
-
   // Display elements
+  // for (int i = 0; i < 5; ++i) {
+  //   pe = PipelineElement();
+  //   pe.element = displayElements[i];
+  //   pipeline.addElement(pe);
+  // }
+
+  GstElement* encode = gst_element_factory_make("x264", "encoder");
+  GstElement* pay = gst_element_factory_make("rtph264pay", "payloader");
+  GstElement* sink = gst_element_factory_make("udpsink", "udp_sink");
+
+  g_object_set(encode,
+             "tune", 0x00000004,  // zerolatency
+             "bitrate", 2048,     // kbps
+             NULL);
+
+g_object_set(pay,
+             "pt", 96,
+             NULL);
+
+g_object_set(sink,
+             "host", "192.168.1.70",  // destination IP
+             "port", 5000,
+             NULL);
+
   pe = PipelineElement();
-  pe.element = fakeSink;
+  pe.element = encode;
   pipeline.addElement(pe);
+  pe = PipelineElement();
+  pe.element = pay;
+  pipeline.addElement(pe);
+  pe = PipelineElement();
+  pe.element = sink;
+  pipeline.addElement(pe);
+
+  // Fakesink for testing
+  // pe = PipelineElement();
+  // pe.element = fakeSink;
+  // pipeline.addElement(pe);
 
   GstElement* p = pipeline.construct();
   if (!p) {
