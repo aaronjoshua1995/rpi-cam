@@ -84,6 +84,7 @@ int main(int argc, char** argv) {
   GstElement* sinkConvert = GstFactory::getVideoconvert("display_videoconvert", 4, FALSE);
   GstElement* sinkQ = GstFactory::getQueue("sink_q", 30, 0);
   GstElement* sink = GstFactory::getFpsDisplaySink("videosink", "xvimagesink", FALSE, FALSE);
+  GstElement* fakeSink = GstFactory::getFakesink("fakeSink");
 
   GstElement* gstElements[] = {
       source,       caps,         preFlipQ,       videoflip,
@@ -160,7 +161,7 @@ int main(int argc, char** argv) {
                                            drPreIdentityQ, drIdentity,
                                            drPostQ,        sinkConvert,
                                            sinkQ,          sink};
-  for (GstElement* elem : fTrackerPipeline) {
+  for (GstElement* elem : sinkPipeline) {
     PipelineElement pe = PipelineElement();
     pe.element = elem;
     pipeline.addElement(pe);
