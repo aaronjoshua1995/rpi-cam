@@ -28,6 +28,21 @@ const std::string CR_FUNC_NAME  = "face_recognition";
 const std::string FACE_ALIGN_SO_PATH = "/usr/local/hailo/resources/so/libvms_face_align.so";
 const int VDEVICE_KEY = 1;
 
+static GstPadProbeReturn vectorDBCallback(GstPad* pad, GstPadProbeInfo* info,
+                                      gpointer user_data) {
+  // Example: check if this is a buffer probe
+  if (GST_PAD_PROBE_INFO_TYPE(info) & GST_PAD_PROBE_TYPE_BUFFER) {
+    GstBuffer* buffer = GST_PAD_PROBE_INFO_BUFFER(info);
+
+    if (buffer) {
+      g_print("Buffer PTS: %" GST_TIME_FORMAT "\n",
+              GST_TIME_ARGS(GST_BUFFER_PTS(buffer)));
+    }
+  }
+
+  return GST_PAD_PROBE_OK;
+}
+
 int main(int argc, char** argv) {
   // Initialize GStreamer
   gst_init(&argc, &argv);
@@ -106,6 +121,21 @@ int main(int argc, char** argv) {
       recogConvertCaps, recogHailonetQ, recogHailonet,    recogHailofilterQ,
       recogHailofilter, recogOutputQ,   recogWrapHailoagg};
   
+  GstElement* identityQueue = GstFactory::getQueue("identity_cb_q");
+  GstElement* identityCallback = GstFactory::getIdentity("identity_cb");
+  GstPad* identitySrcPad = gst_element_get_static_pad(identityCallback, "src");
+  gst_pad_add_probe(identitySrcPad, GstPadProbeType::GST_PAD_PROBE_TYPE_BUFFER, vectorDBCallback, nullptr, nullptr);
+  // Display pipeline
+  GstElement* displayOverlayQ = GstFactory::getQueue("display_overlay_q");
+  GstElement* displayOverlay = GstFactory::getHailoOverlay("display_overlay", 5, 2, 8, FALSE, TRUE, TRUE);
+  GstElement* sinkConvertQ = GstFactory::getQueue("display_overlay_q");
+  GstElement* sinkConvert = GstFactory::getVideoconvert("display_videoconvert", 4, FALSE);
+  GstElement* sinkQ = GstFactory::getQueue("display_sink_q", 30, 0);
+  GstElement* sink = GstFactory::getFpsDisplaySink("display_sink", "autovideosink", FALSE, FALSE);
+  GstElement* displayElements[] = {
+      displayOverlayQ, displayOverlay, sinkConvertQ, sinkConvert, sinkQ, sink,
+  };
+
   // for (GstElement* elem : gstElements) {
   //   if (!elem) {
   //     g_printerr(
@@ -157,7 +187,22 @@ int main(int argc, char** argv) {
   pe = PipelineElement();
   pe.element = recogWrapOutputQ;
   pipeline.addElement(pe);
+ 
+  // Callback probe
+  pe = PipelineElement();
+  pe.element = identityQueue;
+  pipeline.addElement(pe);
+  pe = PipelineElement();
+  pe.element = identityCallback;
+  pipeline.addElement(pe);
+ 
+  for (int i = 0; i < 5; ++i) {
+    pe = PipelineElement();
+    pe.element = displayElements[i];
+    pipeline.addElement(pe);
+  }
 
+  // Display elements
   pe = PipelineElement();
   pe.element = fakeSink;
   pipeline.addElement(pe);
