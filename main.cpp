@@ -196,12 +196,19 @@ int main(int argc, char** argv) {
   pipeline.addElement(pe);
  
   // Display elements
-  for (int i = 0; i < 5; ++i) {
+  for (int i = 0; i < 4; ++i) {
     pe = PipelineElement();
     pe.element = displayElements[i];
     pipeline.addElement(pe);
   }
 
+  GstElement* capsfilter = gst_element_factory_make("capsfilter", "encoder_caps");
+  GstCaps* caps = gst_caps_new_simple(
+      "video/x-raw",
+      "format", G_TYPE_STRING, "I420",
+      NULL);
+  g_object_set(capsfilter, "caps", caps, NULL);
+  gst_caps_unref(caps);
   GstElement* encode = gst_element_factory_make("openh264enc", "encoder");
   GstElement* parse  = gst_element_factory_make("h264parse", "parse");
   GstElement* pay = gst_element_factory_make("mpegtsmux", "mux");
@@ -216,6 +223,12 @@ g_object_set(sink,
              "port", 5000,
              NULL);
 
+  pe = PipelineElement();
+  pe.element = capsfilter;
+  pipeline.addElement(pe);
+  pe = PipelineElement();
+  pe.element = displayQ;
+  pipeline.addElement(pe);
   pe = PipelineElement();
   pe.element = encode;
   pipeline.addElement(pe);
