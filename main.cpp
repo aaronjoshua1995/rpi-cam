@@ -203,16 +203,12 @@ int main(int argc, char** argv) {
   }
 
   GstElement* encode = gst_element_factory_make("openh264enc", "encoder");
-  GstElement* pay = gst_element_factory_make("rtph264pay", "payloader");
+  GstElement* parse  = gst_element_factory_make("h264parse", "parse");
+  GstElement* pay = gst_element_factory_make("mpegtsmux", "mux");
   GstElement* sink = gst_element_factory_make("udpsink", "udp_sink");
 
   g_object_set(encode,
-             "tune", 0x00000004,  // zerolatency
-             "bitrate", 2048,     // kbps
-             NULL);
-
-g_object_set(pay,
-             "pt", 96,
+             "bitrate", 4000,        // kbps
              NULL);
 
 g_object_set(sink,
