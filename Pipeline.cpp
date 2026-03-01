@@ -7,7 +7,7 @@ void Pipeline::addElement(const PipelineElement& element) {
 }
 
 GstElement* Pipeline::construct() {
-  GstElement* pipeline = gst_pipeline_new("dashcam_pipeline");
+  GstElement* pipeline = gst_pipeline_new("app_pipeline");
   if (!pipeline) {
     g_printerr("Failed to create pipeline\n");
     return nullptr;
